@@ -21,7 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-package de.ailis.pherialize.exceptions;
+package de.ailis.pherialize;
 
 
 

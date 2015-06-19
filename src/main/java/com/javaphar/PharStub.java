@@ -7,10 +7,12 @@ import java.io.IOException;
  */
 public final class PharStub implements PharWritable {
 
+    private static final String DEFAULT_STUB = "<?php\n__HALT_COMPILER(); ?>";
+
     private String stubCode = "";
 
     public PharStub() {
-
+        this.stubCode = DEFAULT_STUB;
     }
 
     public PharStub(final String stubCode) {
@@ -19,11 +21,8 @@ public final class PharStub implements PharWritable {
 
     @Override
     public void write(final PharOutputStream out) throws IOException {
-        //out.writeString("<?php ");
         if (this.stubCode != null) {
             out.writeString(this.stubCode);
         }
-        //out.writeString("__HALT_COMPILER(); ?>");
     }
-
 }

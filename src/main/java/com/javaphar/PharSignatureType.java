@@ -1,7 +1,8 @@
 package com.javaphar;
 
 /**
- * @see <a href="http://www.php.net/manual/en/phar.fileformat.signature.php">Phar Signature format</a>
+ * @see
+ * <a href="http://www.php.net/manual/en/phar.fileformat.signature.php">Phar Signature format</a>
  */
 public enum PharSignatureType {
 
@@ -32,4 +33,12 @@ public enum PharSignatureType {
         return this.numberOfBytes;
     }
 
+    public static PharSignatureType getEnumByFlag(int code) {
+        for (PharSignatureType e : PharSignatureType.values()) {
+            if (code == e.getFlag()) {
+                return e;
+            }
+        }
+        return null;
+    }
 }

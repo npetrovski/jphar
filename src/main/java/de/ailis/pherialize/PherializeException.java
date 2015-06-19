@@ -21,28 +21,27 @@
  * IN THE SOFTWARE.
  */
 
-package de.ailis.pherialize.exceptions;
-
+package de.ailis.pherialize;
 
 
 /**
- * Exception thrown when someting goes wrong while serializing.
+ * Base exception for Pherialize problems.
  * 
  * @author Klaus Reimer (k@ailis.de)
  * @version $Revision$
  */
 
-public class SerializeException extends PherializeException
+abstract public class PherializeException extends RuntimeException
 {
     /** Serial version UID */
-    private static final long serialVersionUID = 5304443329670892370L;
+    private static final long serialVersionUID = 1479169743443565173L;
 
 
     /**
      * Constructor
      */
 
-    public SerializeException()
+    public PherializeException()
     {
         super();
     }
@@ -55,7 +54,7 @@ public class SerializeException extends PherializeException
      *            The exception message
      */
 
-    public SerializeException(final String message)
+    public PherializeException(final String message)
     {
         super(message);
     }
@@ -70,7 +69,7 @@ public class SerializeException extends PherializeException
      *            The root cause
      */
 
-    public SerializeException(final String message, final Throwable cause)
+    public PherializeException(final String message, final Throwable cause)
     {
         super(message, cause);
     }
@@ -83,7 +82,7 @@ public class SerializeException extends PherializeException
      *            The root cause
      */
 
-    public SerializeException(final Throwable cause)
+    public PherializeException(final Throwable cause)
     {
         super(cause);
     }
