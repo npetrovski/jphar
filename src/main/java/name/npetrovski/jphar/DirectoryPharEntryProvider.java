@@ -1,4 +1,4 @@
-package com.javaphar;
+package name.npetrovski.jphar;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +37,7 @@ public class DirectoryPharEntryProvider implements PharEntryProvider {
 
     @Override
     public List<PharEntry> getPharEntries() throws IOException {
-        List<PharEntry> pharEntries = new ArrayList<PharEntry>();
+        List<PharEntry> pharEntries = new ArrayList();
         addPharEntriesRecursively(pharEntries, this.rootPath);
         return pharEntries;
 

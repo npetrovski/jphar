@@ -1,4 +1,4 @@
-package com.javaphar;
+package name.npetrovski.jphar;
 
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 
@@ -12,6 +12,10 @@ public final class PharVersion {
         throw new AssertionError();
     }
 
+    public static String getVersion(byte[] b) {
+        return "1.1.1";
+    }
+    
     public static byte[] getVersionNibbles(final String version) throws NumberFormatException {
         String[] splitted = version.split("\\.");
         if (splitted.length != 3) {

@@ -1,4 +1,4 @@
-package com.javaphar;
+package name.npetrovski.jphar;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -11,8 +11,11 @@ public final class PharManifest implements PharWritable {
     private static final int BITMAP_SIGNATURE_FLAG = 0x00010000;
 
     private final File pharFile;
+    
     private final byte[] pharFiles;
+    
     private List<PharEntry> pharEntries;
+    
     private PharMetadata pharMetadata;
 
 
@@ -40,11 +43,13 @@ public final class PharManifest implements PharWritable {
         this.pharMetadata = pharMetadata;
     }
 
+    @Override
     public void write(final PharOutputStream out) throws IOException {
-        byte[] pharAlias = this.pharFile.getName().getBytes("UTF-8");
+        byte[] pharAlias = this.pharFile.getName().getBytes(Phar.STRING_ENCODING);
 
 
         ByteArrayOutputStream metadataOutputStream = new ByteArrayOutputStream();
+        
         PharOutputStream pharOutputStream = new PharOutputStream(metadataOutputStream);
         pharOutputStream.write(this.pharMetadata);
         pharOutputStream.flush();

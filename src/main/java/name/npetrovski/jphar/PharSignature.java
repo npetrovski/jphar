@@ -1,4 +1,4 @@
-package com.javaphar;
+package name.npetrovski.jphar;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,10 +11,10 @@ import java.security.NoSuchAlgorithmException;
  */
 public final class PharSignature implements PharWritable {
 
-    private static final byte[] MAGIC_GBMB = "GBMB".getBytes();
-
+    static final String MAGIC_GBMB = "GBMB";
+    
     private final File pharFile;
-    private final PharSignatureType pharSignatureType;
+    private final PharSignatureType signatureType;
 
     public PharSignature(final File pharFile, final PharSignatureType pharSignatureType) {
         if (pharFile == null) {
@@ -24,13 +24,14 @@ public final class PharSignature implements PharWritable {
             throw new IllegalArgumentException("Phar signature type cannot be null");
         }
         this.pharFile = pharFile;
-        this.pharSignatureType = pharSignatureType;
+        this.signatureType = pharSignatureType;
     }
 
+    @Override
     public void write(final PharOutputStream out) throws IOException {
         MessageDigest signature = null;
         try {
-            signature = MessageDigest.getInstance(this.pharSignatureType.getAlgorithm());
+            signature = MessageDigest.getInstance(this.signatureType.getAlgorithm());
 
             // create signature
             signature.update(Files.readAllBytes(this.pharFile.toPath()));
@@ -39,10 +40,10 @@ public final class PharSignature implements PharWritable {
             out.write(signature.digest());
 
             // write signature flag
-            out.writeInt(this.pharSignatureType.getFlag());
+            out.writeInt(this.signatureType.getFlag());
 
             // write magic GBMB
-            out.write(MAGIC_GBMB);
+            out.write(MAGIC_GBMB.getBytes());
         } catch (NoSuchAlgorithmException e) {
             throw new IOException("Could not write signature to phar", e);
         }

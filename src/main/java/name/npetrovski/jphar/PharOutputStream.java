@@ -1,4 +1,4 @@
-package com.javaphar;
+package name.npetrovski.jphar;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -6,7 +6,6 @@ import java.io.OutputStream;
 
 public final class PharOutputStream extends FilterOutputStream {
 
-    private static final String STRING_ENCODING = "UTF-8";
 
     public PharOutputStream(final OutputStream outputStream) {
         super(outputStream);
@@ -23,7 +22,7 @@ public final class PharOutputStream extends FilterOutputStream {
         if (s == null) {
             throw new NullPointerException("String cannot be null");
         }
-        this.out.write(s.getBytes(STRING_ENCODING));
+        this.out.write(s.getBytes(Phar.STRING_ENCODING));
     }
 
     public void write(final PharWritable writable) throws IOException {
