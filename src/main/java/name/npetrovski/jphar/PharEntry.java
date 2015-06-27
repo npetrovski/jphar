@@ -26,19 +26,19 @@ public final class PharEntry {
 
     private final PharCompression compression;
 
-    private long checksum = 0;
+    private int checksum = 0;
 
     private byte[] compressedBytes;
 
     private byte[] decompressedBytes;
 
-    private long decompressedSize;
+    private int decompressedSize;
 
     private long offset;
 
-    private long size;
+    private int size;
     
-    private long unixModTime = System.currentTimeMillis() / 1000L;
+    private int unixModTime = (int) (System.currentTimeMillis() / 1000L);
 
     public PharEntry(final File file, final String localPath, final PharCompression pharCompression) throws IOException {
 
@@ -47,14 +47,14 @@ public final class PharEntry {
 
         if (null != file) {
             this.file = file;
-            this.decompressedSize = file.length();
+            this.decompressedSize = (int) file.length();
 
             this.decompressedBytes = Files.readAllBytes(this.file.toPath());
 
             CRC32 crc = new CRC32();
             crc.update(this.decompressedBytes);
 
-            this.checksum = crc.getValue();
+            this.checksum = (int) crc.getValue();
 
             ByteArrayOutputStream compressed = new ByteArrayOutputStream();
 
@@ -187,11 +187,11 @@ public final class PharEntry {
         this.offset = offset;
     }
 
-    public long getSize() {
+    public int getSize() {
         return size;
     }
 
-    public void setSize(long size) {
+    public void setSize(int size) {
         this.size = size;
     }
     
@@ -203,19 +203,19 @@ public final class PharEntry {
         return new Date(unixModTime * 1000);
     }
 
-    public void setModTime(long ts) {
+    public void setModTime(int ts) {
         this.unixModTime = ts;
     }
 
-    public long getModTime() {
+    public int getModTime() {
         return this.unixModTime;
     }
 
-    public void setChecksum(long checksum) {
+    public void setChecksum(int checksum) {
         this.checksum = checksum;
     }
 
-    public void setDecompressedSize(long decompressedSize) {
+    public void setDecompressedSize(int decompressedSize) {
         this.decompressedSize = decompressedSize;
     }
      

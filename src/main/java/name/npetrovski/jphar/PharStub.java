@@ -27,6 +27,10 @@ public final class PharStub implements PharWritable {
     public byte[] getStubCode() {
         return this.stubCode.getBytes();
     }
+    
+    public int getSize() {
+        return this.stubCode.getBytes().length;
+    }
 
     @Override
     public void write(final PharOutputStream out) throws IOException {

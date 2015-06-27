@@ -203,7 +203,7 @@ public final class Phar {
                 break;
             }
         }
-        //this.phar.stub.setCode(stubCode);
+        this.stub.setCode(stubCode);
 
         int manifestLength = is.readRInt();
         if (manifestLength == 0) {
@@ -268,11 +268,11 @@ public final class Phar {
             }
 
             PharEntry entry = new PharEntry(null, path, PharCompression.getEnumByInt(fileFlags & PHAR_ENT_COMPRESSION_MASK));
-            entry.setModTime((long) unixTimestamp);
+            entry.setModTime(unixTimestamp);
             entry.setOffset(offset);
             entry.setSize(compressedLen);
-            entry.setChecksum((long) crcChecksum);
-            entry.setDecompressedSize((long) decompressedSize);
+            entry.setChecksum(crcChecksum);
+            entry.setDecompressedSize(decompressedSize);
 
             this.entries.add(entry);
 
