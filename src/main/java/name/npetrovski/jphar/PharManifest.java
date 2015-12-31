@@ -61,17 +61,20 @@ public final class PharManifest implements PharWritable {
         out.writeInt(manifestLength);
         out.writeInt(this.pharEntries.size());
 
-        // version
-        out.write(PharVersion.getVersionNibbles(Phar.PHAR_VERSION));
+        // pharVersion
+        out.write(PharVersion.getVersionNibbles(Phar.DEFAULT_PHAR_VERSION));
 
         // global bitmapped flags
         out.writeInt(BITMAP_SIGNATURE_FLAG);
+
+//        int flag = ByteBuffer.wrap(this.pharCompression.getBitmapFlag()).getInt();
+//        out.writeInt(flag);
 
         // write alias
         out.writeInt(pharAlias.length);
         out.write(pharAlias);
 
-        // write metadata
+        // write serializedMeta
         out.write(metadataBytes);
     }
 

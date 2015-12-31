@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
-
 public final class FilePharEntryProvider implements PharEntryProvider {
 
     private final File file;
@@ -22,7 +19,7 @@ public final class FilePharEntryProvider implements PharEntryProvider {
         if (!file.isFile()) {
             throw new IllegalArgumentException("File must be a valid file and cannot be a directory");
         }
-        if (StringUtils.isEmpty(localPath)) {
+        if (localPath == null || localPath.length() == 0) {
             throw new IllegalArgumentException("Local path cannot be empty");
         }
         if (pharCompression == null) {

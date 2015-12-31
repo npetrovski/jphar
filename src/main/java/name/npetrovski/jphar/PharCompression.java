@@ -11,17 +11,17 @@ public enum PharCompression {
      */
     
     /**
-     * File is compressed with zlib compression - 0x00001000.
+     * File is compressed with zlib compression - 0 x 00 00 10 00.
      */
     GZIP(new byte[]{0, 0x10, 0, 0}),
     /**
-     * File is compressed with bzip compression - 0x00002000.
+     * File is compressed with bzip compression - 0 x 00 00 20 00.
      */
     BZIP2(new byte[]{0, 0x20, 0, 0}),
     /**
-     * Phar is not compressed - 0x00000000.
+     * Phar contains a verification signature - 0 x 00 01 00 00.
      */
-    NONE(new byte[]{0, 0, 0x00, 0});
+    NONE(new byte[]{0, 0x01, 0, 0});
 
     public final byte[] bitmapFlag;
 

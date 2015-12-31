@@ -1,6 +1,5 @@
 package name.npetrovski.jphar;
 
-import de.ailis.pherialize.Pherialize;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,62 +9,56 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import de.ailis.pherialize.Pherialize;
+import de.ailis.pherialize.Mixed;
 
 public final class Phar {
 
-    static final String PHAR_VERSION = "1.1.1";
-    
+    static final String DEFAULT_PHAR_VERSION = "1.1.1";
+
     static final String STRING_ENCODING = "UTF-8";
-    
+
     static final int PHAR_FILE_COMPRESSION_MASK = 0x00F00000;
 
     static final int PHAR_ENT_COMPRESSION_MASK = 0x0000F000;
-    
-    static final int BITMAP_SIGNATURE_FLAG = 0x00010000;
-    
-    private final File file;
 
-    protected PharCompression pharCompression;
+    static final int BITMAP_SIGNATURE_FLAG = 0x00010000;
+
+    private final File source;
+
+    protected PharCompression compression;
 
     public PharStub stub = new PharStub();
 
+    protected String version = Phar.DEFAULT_PHAR_VERSION;
+
     protected String alias = "";
 
-    protected List<PharEntry> entries = new ArrayList();
+    protected List<PharEntry> entries = new ArrayList<PharEntry>();
 
-    protected Map<String, String> metadata = new HashMap<>();
+    protected String serializedMeta;
 
-    public Phar(final File file) throws IOException {
-        this(file, PharCompression.NONE);
+    public Phar(final File source) throws IOException {
+        this(source, PharCompression.NONE);
     }
 
-    public Phar(final File file, final PharCompression pharCompression) throws IOException {
-        if (file == null) {
-            throw new IllegalArgumentException("File cannot be null");
+    public Phar(final File source, final PharCompression compression) throws IOException {
+        if (source == null) {
+            throw new IllegalArgumentException("Source file cannot be null");
         }
 
-        this.file = file;
+        this.source = source;
 
-        if (pharCompression == null) {
+        if (compression == null) {
             throw new IllegalArgumentException("Phar compression cannot be null");
         }
 
-        this.pharCompression = pharCompression;
-        
-        if (file.exists() && file.isFile()) {
-            PharInputStream input = null;
-            try {
-                input = new PharInputStream(new FileInputStream(this.file));
-                parse(input);
-            } finally {
-                if (input != null) {
-                    input.close();
-                }
-            }
+        this.compression = compression;
+
+        if (source.exists() && source.isFile()) {
+            parse(new PharInputStream(new FileInputStream(this.source)));
         }
     }
 
@@ -88,9 +81,9 @@ public final class Phar {
      */
     public void add(final File file, final String localPath) throws IOException {
         if (file.isDirectory()) {
-            add(new DirectoryPharEntryProvider(file, localPath, this.pharCompression));
+            add(new DirectoryPharEntryProvider(file, localPath));
         } else {
-            add(new FilePharEntryProvider(file, localPath, this.pharCompression));
+            add(new FilePharEntryProvider(file, localPath, this.compression));
         }
     }
 
@@ -100,35 +93,60 @@ public final class Phar {
         }
     }
 
-    public void setMetadata(final String key, final String value) {
-        this.metadata.put(key, value);
+    /**
+     * Set metadata
+     *
+     * @param data
+     */
+    public void setMetadata(Object data) {
+        this.serializedMeta = Pherialize.serialize(data);
+    }
+
+    /**
+     * Get PHP serialized metadata
+     *
+     * @return
+     */
+    public Mixed getMetadata() {
+        return Pherialize.unserialize(this.serializedMeta);
     }
 
     public void setStubFile(File stubFile) throws IOException {
         this.stub = new PharStub(new String(Files.readAllBytes(stubFile.toPath())));
     }
-    
-    public List getEntries() {
+
+    public List<PharEntry> getEntries() {
         return this.entries;
     }
 
+    public String getVersion() {
+        return this.version;
+    }
+
+    public PharCompression getCompression() {
+        return this.compression;
+    }
+
+    public String getAlias() {
+        return this.alias;
+    }
+
     public synchronized PharEntry getEntry(String path) throws IOException {
-        
+
         PharEntry entry = null;
-        
+
         for (PharEntry e : this.entries) {
             if (path.equals(e.getName())) {
                 entry = e;
                 break;
             }
         }
-        
+
         RandomAccessFile reader;
         if (entry != null && entry.getSize() > 0) {
-            
-            reader = new RandomAccessFile(file, "r");
-            reader.seek(entry.getOffset());
 
+            reader = new RandomAccessFile(source, "r");
+            reader.seek(entry.getOffset());
 
             byte[] data = new byte[(int) entry.getSize()];
             reader.read(data, 0, (int) entry.getSize());
@@ -141,11 +159,10 @@ public final class Phar {
         return entry;
     }
 
-
     public void write() throws IOException, NoSuchAlgorithmException {
         PharOutputStream out = null;
         try {
-            out = new PharOutputStream(new FileOutputStream(this.file));
+            out = new PharOutputStream(new FileOutputStream(this.source));
 
             // write stub
             out.write(this.stub);
@@ -153,7 +170,7 @@ public final class Phar {
             byte[] pharFiles = writePharEntriesManifest();
 
             PharManifest pharManifest = new PharManifest(
-                    this.file, pharFiles, this.entries, new PharMetadata(this.metadata));
+                    this.source, pharFiles, this.entries, new PharMetadata(this.serializedMeta));
 
             out.write(pharManifest);
             out.write(pharFiles);
@@ -166,7 +183,7 @@ public final class Phar {
             out.flush();
 
             // writing signature
-            out.write(new PharSignature(this.file, PharSignatureType.SHA1));
+            out.write(new PharSignature(this.source, PharSignatureType.SHA1));
 
             out.flush();
         } finally {
@@ -192,8 +209,7 @@ public final class Phar {
             }
         }
     }
-    
-    
+
     private void parse(PharInputStream is) throws IOException {
         int c;
         String stubCode = "";
@@ -217,29 +233,27 @@ public final class Phar {
             throw new IllegalArgumentException("Total number of files cannot be zero.");
         }
 
-        // Version
-        // @todo parse it
         byte[] versionBytes = new byte[2];
         is.read(versionBytes, 0, 2);
+        this.version = PharVersion.getVersionString(versionBytes);
 
         int globalBitmappedFlags = is.readRInt();
-        this.pharCompression = PharCompression.getEnumByInt(globalBitmappedFlags & PHAR_FILE_COMPRESSION_MASK);
+        this.compression = PharCompression.getEnumByInt(globalBitmappedFlags & PHAR_FILE_COMPRESSION_MASK);
 
         int aliasLen = is.readRInt();
         if (aliasLen > 0) {
-            byte[] alias = new byte[aliasLen];
-            is.read(alias, 0, aliasLen);
+            byte[] aliasBytes = new byte[aliasLen];
+            is.read(aliasBytes, 0, aliasLen);
 
-            this.alias = new String(alias);
+            this.alias = new String(aliasBytes);
         }
 
         int metadataLen = is.readRInt();
         if (metadataLen > 0) {
-            byte[] metadata = new byte[metadataLen];
-            is.read(metadata, 0, metadataLen);
+            byte[] metadataBytes = new byte[metadataLen];
+            is.read(metadataBytes, 0, metadataLen);
 
-            String metaSerialized = new String(metadata);
-            this.metadata = (Map<String, String>) Pherialize.unserialize(metaSerialized);
+            this.serializedMeta = new String(metadataBytes);
         }
 
         long offset = dataPosition;

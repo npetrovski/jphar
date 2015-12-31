@@ -8,36 +8,31 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
-
 public class DirectoryPharEntryProvider implements PharEntryProvider {
 
     private final Path rootPath;
     private final String localPath;
-    private final PharCompression pharCompression;
 
-    public DirectoryPharEntryProvider(final File directory, final String localPath, final PharCompression pharCompression) {
+    public DirectoryPharEntryProvider(final File directory, final String localPath) {
         if (directory == null) {
             throw new IllegalArgumentException("Directory cannot be null");
         }
         if (!directory.isDirectory()) {
             throw new IllegalArgumentException("Directory must be a valid directory");
         }
-        if (StringUtils.isEmpty(localPath)) {
+        if (localPath == null || localPath.length() == 0) {
             throw new IllegalArgumentException("Local path cannot be empty");
         }
-        if (pharCompression == null) {
-            throw new IllegalArgumentException("Phar compression cannot be null");
-        }
+
         this.rootPath = directory.toPath();
         this.localPath = localPath;
-        this.pharCompression = pharCompression;
+
     }
 
     @Override
     public List<PharEntry> getPharEntries() throws IOException {
-        List<PharEntry> pharEntries = new ArrayList();
+        List<PharEntry> pharEntries = new ArrayList<PharEntry>();
+
         addPharEntriesRecursively(pharEntries, this.rootPath);
         return pharEntries;
 
@@ -51,7 +46,7 @@ public class DirectoryPharEntryProvider implements PharEntryProvider {
                     addPharEntriesRecursively(pharEntries, element);
                 } else {
                     String relativePath = this.rootPath.relativize(element).toString();
-                    pharEntries.add(new PharEntry(file, this.localPath + "/" + relativePath, this.pharCompression));
+                    pharEntries.add(new PharEntry(file, this.localPath + "/" + relativePath, PharCompression.NONE));
                 }
             }
         }

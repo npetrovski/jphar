@@ -4,7 +4,7 @@
     <artifactId>jphar</artifactId>
     <name>jphar</name>
     <description>Java library for managing PHP phar archives</description>
-    <version>1.0.2</version>
+    <version>1.0.4</version>
 
     <build>
         <plugins>
@@ -12,8 +12,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <debug>false</debug>
                 </configuration>
@@ -65,6 +65,11 @@
                 </exclusion>
             </exclusions>
             <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>de.ailis.pherialize</groupId>
+            <artifactId>pherialize</artifactId>
+            <version>1.2.3-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <properties>
