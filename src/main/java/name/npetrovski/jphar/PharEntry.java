@@ -20,83 +20,94 @@ import org.apache.commons.lang3.ArrayUtils;
 
 public final class PharEntry {
 
-    private File file;
-
-    private final String name;
+    private String name;
 
     private final PharCompression compression;
 
     private int checksum = 0;
 
-    private byte[] compressedBytes;
+    private byte[] compressedBytes = new byte[0];
 
-    private byte[] decompressedBytes;
+    private byte[] decompressedBytes = new byte[0];
 
-    private int decompressedSize;
+    private int decompressedSize = 0;
 
     private long offset;
 
-    private int size;
-    
+    private int size = 0;
+
     private int unixModTime = (int) (System.currentTimeMillis() / 1000L);
 
-    public PharEntry(final File file, final String localPath, final PharCompression pharCompression) throws IOException {
+    public PharEntry(final String path, final PharCompression compression) throws IOException {
+        this.name = path;
+        this.compression = compression;
+    }
 
-        this.name = localPath;
-        this.compression = pharCompression;
+    public void pack(final File source) throws IOException {
 
-        if (null != file) {
-            this.file = file;
-            this.decompressedSize = (int) file.length();
+        if (source.isDirectory()) {
 
-            this.decompressedBytes = Files.readAllBytes(this.file.toPath());
+            name = name + "/";
+            unixModTime = (int) source.lastModified() / 1000;
+
+        } else if (source.isFile() && source.canRead()) {
+
+            unixModTime = (int) source.lastModified() / 1000;
+
+            decompressedSize = (int) source.length();
+
+            decompressedBytes = Files.readAllBytes(source.toPath());
 
             CRC32 crc = new CRC32();
             crc.update(this.decompressedBytes);
 
-            this.checksum = (int) crc.getValue();
+            checksum = (int) crc.getValue();
 
             ByteArrayOutputStream compressed = new ByteArrayOutputStream();
 
-            OutputStream compressor = null;
-            try {
-                compressor = getCompressorOutputStream(compressed);
-                Files.copy(this.file.toPath(), compressor);
+            try (OutputStream compressor = getCompressorOutputStream(compressed)) {
+                Files.copy(source.toPath(), compressor);
                 compressor.flush();
-            } finally {
                 compressor.close();
             }
 
-            if (this.compression == PharCompression.GZIP) {
-                this.compressedBytes = Arrays.copyOfRange(compressed.toByteArray(), 10, compressed.toByteArray().length - 8);
-            } else {
-                this.compressedBytes = compressed.toByteArray();
+            switch (compression) {
+                case GZIP:
+                    compressedBytes = Arrays.copyOfRange(compressed.toByteArray(), 10, compressed.toByteArray().length - 8);
+                    break;
+                case BZIP2:
+                default:
+                    compressedBytes = compressed.toByteArray();
             }
         }
     }
 
     public void unpack(byte[] compressedBytes) throws IOException {
 
-        InputStream decompressor = null;
+        if (null != compressedBytes && compressedBytes.length > 0) {
+            InputStream decompressor = null;
 
-        try {
-            switch (this.compression) {
-                case GZIP:
+            try {
+                switch (compression) {
+                    case GZIP:
 
-                    compressedBytes = ArrayUtils.addAll(new byte[]{0x1f, (byte) 0x8b, 0x08, 0, 0, 0, 0, 0, 0, (byte) 0xff}, compressedBytes);
-                    compressedBytes = ArrayUtils.addAll(compressedBytes, ByteBuffer.allocate(4).putInt(Integer.reverseBytes((int) this.checksum)).array());
-                    compressedBytes = ArrayUtils.addAll(compressedBytes, ByteBuffer.allocate(4).putInt(Integer.reverseBytes((int) this.decompressedSize)).array());
-                case BZIP2:
-                // Full format is presented
+                        compressedBytes = ArrayUtils.addAll(new byte[]{0x1f, (byte) 0x8b, 0x08, 0, 0, 0, 0, 0, 0, (byte) 0xff}, compressedBytes);
+                        compressedBytes = ArrayUtils.addAll(compressedBytes, ByteBuffer.allocate(4).putInt(Integer.reverseBytes((int) this.checksum)).array());
+                        compressedBytes = ArrayUtils.addAll(compressedBytes, ByteBuffer.allocate(4).putInt(Integer.reverseBytes((int) this.decompressedSize)).array());
+                    case BZIP2:
+                    // Full format is presented
+                }
+
+                this.compressedBytes = compressedBytes;
+
+                decompressor = getCompressorInputStream(new ByteArrayInputStream(compressedBytes));
+                this.decompressedBytes = IOUtils.toByteArray(decompressor);
+
+            } finally {
+                if (null != decompressor) {
+                    decompressor.close();
+                }
             }
-
-            this.compressedBytes = compressedBytes;
-
-            decompressor = getCompressorInputStream(new ByteArrayInputStream(compressedBytes));
-            this.decompressedBytes = IOUtils.toByteArray(decompressor);
-
-        } finally {
-            decompressor.close();
         }
     }
 
@@ -134,19 +145,19 @@ public final class PharEntry {
 
                 byte[] filenameBytes = PharEntry.this.name.replace('\\', '/').getBytes("UTF-8");
 
-                // Filename length
+                // Filename length in bytes
                 out.writeInt(filenameBytes.length);
 
-                // write filename
+                // Filename (length specified in previous)
                 out.write(filenameBytes);
 
-                // Un-compressed file size
+                // Un-compressed file size in bytes
                 out.writeInt((int) PharEntry.this.decompressedSize);
 
                 // Unix timestamp of file
-                out.writeInt((int) (PharEntry.this.file.lastModified() / 1000));
+                out.writeInt((int) (PharEntry.this.unixModTime));
 
-                // Compressed file size
+                // Compressed file size in bytes
                 out.writeInt((int) PharEntry.this.compressedBytes.length);
 
                 // CRC32 checksum of un-compressed file contents
@@ -155,8 +166,8 @@ public final class PharEntry {
                 // Bit-mapped File-specific flags
                 out.write(PharEntry.this.compression.getBitmapFlag());
 
-                // write meta-data length
-                out.writeInt(0);
+                // write meta-data
+                out.write(new PharMetadata(""));
             }
         };
     }
@@ -194,11 +205,11 @@ public final class PharEntry {
     public void setSize(int size) {
         this.size = size;
     }
-    
+
     public byte[] getContents() {
         return this.decompressedBytes;
     }
-    
+
     public Date getLastModifiedDate() {
         return new Date(unixModTime * 1000);
     }
@@ -218,5 +229,5 @@ public final class PharEntry {
     public void setDecompressedSize(int decompressedSize) {
         this.decompressedSize = decompressedSize;
     }
-     
+
 }

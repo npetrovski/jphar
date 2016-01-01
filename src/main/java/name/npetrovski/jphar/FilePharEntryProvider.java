@@ -12,29 +12,34 @@ public final class FilePharEntryProvider implements PharEntryProvider {
     private final String localPath;
     private final PharCompression pharCompression;
 
-    public FilePharEntryProvider(final File file, final String localPath, final PharCompression pharCompression) throws FileNotFoundException {
+    public FilePharEntryProvider(final File file, final PharCompression pharCompression)
+            throws FileNotFoundException {
+
         if (file == null) {
             throw new IllegalArgumentException("File cannot be null");
         }
+
         if (!file.isFile()) {
             throw new IllegalArgumentException("File must be a valid file and cannot be a directory");
         }
-        if (localPath == null || localPath.length() == 0) {
-            throw new IllegalArgumentException("Local path cannot be empty");
-        }
+
         if (pharCompression == null) {
             throw new IllegalArgumentException("Phar compression cannot be null");
         }
         this.file = file;
-        this.localPath = localPath;
+        this.localPath = file.getName();
         this.pharCompression = pharCompression;
     }
 
     @Override
     public List<PharEntry> getPharEntries() throws IOException {
-        List<PharEntry> pharEntries = new LinkedList<>();
-        pharEntries.add(new PharEntry(this.file, this.localPath, this.pharCompression));
-        return pharEntries;
+        return new LinkedList<PharEntry>() {
+            {
+                PharEntry entry = new PharEntry(localPath, pharCompression);
+                entry.pack(file);
+                add(entry);
+            }
+        };
     }
 
 }

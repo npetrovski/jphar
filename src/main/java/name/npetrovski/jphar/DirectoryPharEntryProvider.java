@@ -12,28 +12,31 @@ public class DirectoryPharEntryProvider implements PharEntryProvider {
 
     private final Path rootPath;
     private final String localPath;
+    private final PharCompression pharCompression;
 
-    public DirectoryPharEntryProvider(final File directory, final String localPath) {
+    public DirectoryPharEntryProvider(final File directory, final PharCompression pharCompression) {
+
         if (directory == null) {
             throw new IllegalArgumentException("Directory cannot be null");
         }
+
         if (!directory.isDirectory()) {
             throw new IllegalArgumentException("Directory must be a valid directory");
         }
-        if (localPath == null || localPath.length() == 0) {
-            throw new IllegalArgumentException("Local path cannot be empty");
-        }
 
+        if (pharCompression == null) {
+            throw new IllegalArgumentException("Phar compression cannot be null");
+        }
         this.rootPath = directory.toPath();
-        this.localPath = localPath;
+        this.localPath = directory.getName();
+        this.pharCompression = pharCompression;
 
     }
 
     @Override
     public List<PharEntry> getPharEntries() throws IOException {
         List<PharEntry> pharEntries = new ArrayList<PharEntry>();
-
-        addPharEntriesRecursively(pharEntries, this.rootPath);
+        addPharEntriesRecursively(pharEntries, rootPath);
         return pharEntries;
 
     }
@@ -41,12 +44,16 @@ public class DirectoryPharEntryProvider implements PharEntryProvider {
     private void addPharEntriesRecursively(final List<PharEntry> pharEntries, final Path directory) throws IOException {
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directory)) {
             for (Path element : directoryStream) {
+
+                String path = String.format("%s/%s", localPath, rootPath.relativize(element).toString());
+
                 File file = element.toFile();
-                if (file.isDirectory()) {
+                if (file.isDirectory() && file.list().length > 0) {
                     addPharEntriesRecursively(pharEntries, element);
                 } else {
-                    String relativePath = this.rootPath.relativize(element).toString();
-                    pharEntries.add(new PharEntry(file, this.localPath + "/" + relativePath, PharCompression.NONE));
+                    PharEntry entry = new PharEntry(path, pharCompression);
+                    entry.pack(file);
+                    pharEntries.add(entry);
                 }
             }
         }

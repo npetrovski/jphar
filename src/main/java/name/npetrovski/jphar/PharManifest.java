@@ -1,77 +1,80 @@
 package name.npetrovski.jphar;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 
 public final class PharManifest implements PharWritable {
 
     private static final int BITMAP_SIGNATURE_FLAG = 0x00010000;
 
-    private final File pharFile;
+    private final String alias;
     
-    private final byte[] pharFiles;
+    private final int pharFilesLength;
     
-    private List<PharEntry> pharEntries;
+    private final int pharEntriesCount;
     
     private PharMetadata pharMetadata;
 
 
     public PharManifest(
-            final File pharFile,
-            final byte[] pharFiles,
-            final List<PharEntry> pharEntries,
+            final String alias,
+            final int pharFilesLength,
+            final int pharEntriesCount,
             final PharMetadata pharMetadata) {
 
-        if (pharFile == null) {
+        if (alias == null) {
             throw new IllegalArgumentException("Phar file cannot be null");
         }
-        if (pharFiles == null) {
-            throw new IllegalArgumentException("Phar files bytes cannot be null");
+        if (pharFilesLength == 0) {
+            throw new IllegalArgumentException("Phar files length cannot be zero");
         }
-        if (pharEntries == null) {
-            throw new IllegalArgumentException("Phar entries cannot be null");
+        if (pharEntriesCount == 0) {
+            throw new IllegalArgumentException("Phar entries count cannot be zero");
         }
         if (pharMetadata == null) {
             throw new IllegalArgumentException("Phar metadata cannot be null");
         }
-        this.pharFile = pharFile;
-        this.pharFiles = pharFiles;
-        this.pharEntries = pharEntries;
+        this.alias = alias;
+        this.pharFilesLength = pharFilesLength;
+        this.pharEntriesCount = pharEntriesCount;
         this.pharMetadata = pharMetadata;
     }
 
     @Override
     public void write(final PharOutputStream out) throws IOException {
-        byte[] pharAlias = this.pharFile.getName().getBytes(Phar.STRING_ENCODING);
-
-
+        
         ByteArrayOutputStream metadataOutputStream = new ByteArrayOutputStream();
         
-        PharOutputStream pharOutputStream = new PharOutputStream(metadataOutputStream);
-        pharOutputStream.write(this.pharMetadata);
-        pharOutputStream.flush();
-        pharOutputStream.close();
+        try (PharOutputStream pharOutputStream = new PharOutputStream(metadataOutputStream)) {
+            pharOutputStream.write(pharMetadata);
+            pharOutputStream.flush();
+        }
 
         byte[] metadataBytes = metadataOutputStream.toByteArray();
+        
+        
+        byte[] pharAlias = alias.getBytes(Phar.STRING_ENCODING);
 
-        int manifestLength = metadataBytes.length + this.pharFiles.length + pharAlias.length + 14;
-        out.writeInt(manifestLength);
-        out.writeInt(this.pharEntries.size());
+        // Length of manifest in bytes (1 MB limit)
+        if (metadataBytes.length > 1024 * 1024) {
+            throw new IOException("Phar manifest too large.");
+        }
+        out.writeInt(metadataBytes.length + pharFilesLength + pharAlias.length + 14);
+        
+        // Number of files in the Phar
+        out.writeInt(pharEntriesCount); 
 
-        // pharVersion
+        // API version of the Phar manifest (currently 1.1.1)
         out.write(PharVersion.getVersionNibbles(Phar.DEFAULT_PHAR_VERSION));
 
-        // global bitmapped flags
+        // Global Phar bitmapped flags
         out.writeInt(BITMAP_SIGNATURE_FLAG);
 
-//        int flag = ByteBuffer.wrap(this.pharCompression.getBitmapFlag()).getInt();
-//        out.writeInt(flag);
-
-        // write alias
+        // Length of Phar alias
         out.writeInt(pharAlias.length);
+        
+        // Phar alias (length based on previous)
         out.write(pharAlias);
 
         // write serializedMeta
