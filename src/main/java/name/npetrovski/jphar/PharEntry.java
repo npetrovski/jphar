@@ -18,18 +18,19 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
-public final class PharEntry {
+public final class PharEntry implements PharWritable {
 
     private String name;
 
-    private final PharCompression compression;
+    private PharCompression compression;
 
     private int checksum = 0;
 
     private byte[] compressedBytes = new byte[0];
 
     private byte[] decompressedBytes = new byte[0];
-
+    
+    // required for unpack
     private int decompressedSize = 0;
 
     private long offset;
@@ -37,6 +38,8 @@ public final class PharEntry {
     private int size = 0;
 
     private int unixModTime = (int) (System.currentTimeMillis() / 1000L);
+
+    private PharMetadata fileMeta = new PharMetadata("");
 
     public PharEntry(final String path, final PharCompression compression) throws IOException {
         this.name = path;
@@ -53,8 +56,6 @@ public final class PharEntry {
         } else if (source.isFile() && source.canRead()) {
 
             unixModTime = (int) source.lastModified() / 1000;
-
-            decompressedSize = (int) source.length();
 
             decompressedBytes = Files.readAllBytes(source.toPath());
 
@@ -85,29 +86,21 @@ public final class PharEntry {
     public void unpack(byte[] compressedBytes) throws IOException {
 
         if (null != compressedBytes && compressedBytes.length > 0) {
-            InputStream decompressor = null;
 
-            try {
-                switch (compression) {
-                    case GZIP:
-
-                        compressedBytes = ArrayUtils.addAll(new byte[]{0x1f, (byte) 0x8b, 0x08, 0, 0, 0, 0, 0, 0, (byte) 0xff}, compressedBytes);
-                        compressedBytes = ArrayUtils.addAll(compressedBytes, ByteBuffer.allocate(4).putInt(Integer.reverseBytes((int) this.checksum)).array());
-                        compressedBytes = ArrayUtils.addAll(compressedBytes, ByteBuffer.allocate(4).putInt(Integer.reverseBytes((int) this.decompressedSize)).array());
-                    case BZIP2:
-                    // Full format is presented
-                }
-
-                this.compressedBytes = compressedBytes;
-
-                decompressor = getCompressorInputStream(new ByteArrayInputStream(compressedBytes));
-                this.decompressedBytes = IOUtils.toByteArray(decompressor);
-
-            } finally {
-                if (null != decompressor) {
-                    decompressor.close();
-                }
+            // GZIP is not in the full specification format
+            if (compression == PharCompression.GZIP) {
+                compressedBytes = ArrayUtils.addAll(new byte[]{0x1f, (byte) 0x8b, 0x08, 0, 0, 0, 0, 0, 0, (byte) 0xff}, compressedBytes);
+                compressedBytes = ArrayUtils.addAll(compressedBytes, ByteBuffer.allocate(4).putInt(Integer.reverseBytes((int) this.checksum)).array());
+                compressedBytes = ArrayUtils.addAll(compressedBytes, ByteBuffer.allocate(4).putInt(Integer.reverseBytes((int) this.decompressedSize)).array());
             }
+
+            this.compressedBytes = compressedBytes;
+
+            try (InputStream decompressor = getCompressorInputStream(new ByteArrayInputStream(compressedBytes))) {
+                this.decompressedBytes = IOUtils.toByteArray(decompressor);
+                decompressor.close();
+            }
+
         }
     }
 
@@ -152,7 +145,7 @@ public final class PharEntry {
                 out.write(filenameBytes);
 
                 // Un-compressed file size in bytes
-                out.writeInt((int) PharEntry.this.decompressedSize);
+                out.writeInt((int) PharEntry.this.decompressedBytes.length);
 
                 // Unix timestamp of file
                 out.writeInt((int) (PharEntry.this.unixModTime));
@@ -167,19 +160,14 @@ public final class PharEntry {
                 out.write(PharEntry.this.compression.getBitmapFlag());
 
                 // write meta-data
-                out.write(new PharMetadata(""));
+                out.write(fileMeta);
             }
         };
     }
 
-    public PharWritable getPharEntryData() {
-        return new PharWritable() {
-
-            @Override
-            public void write(final PharOutputStream out) throws IOException {
-                out.write(PharEntry.this.compressedBytes);
-            }
-        };
+    @Override
+    public void write(final PharOutputStream out) throws IOException {
+        out.write(PharEntry.this.compressedBytes);
     }
 
     public boolean isDirectory() {
@@ -226,8 +214,20 @@ public final class PharEntry {
         this.checksum = checksum;
     }
 
+    public PharMetadata getFileMeta() {
+        return fileMeta;
+    }
+
+    public void setFileMeta(PharMetadata fileMeta) {
+        this.fileMeta = fileMeta;
+    }
+
+    public PharCompression getCompression() {
+        return compression;
+    }
+
     public void setDecompressedSize(int decompressedSize) {
         this.decompressedSize = decompressedSize;
     }
-
+ 
 }

@@ -4,7 +4,7 @@
     <artifactId>jphar</artifactId>
     <name>jphar</name>
     <description>Java library for managing PHP phar archives</description>
-    <version>1.0.6</version>
+    <version>1.1.3</version>
 
     <build>
         <plugins>

@@ -10,7 +10,7 @@ import junit.framework.TestSuite;
 
 public class BasicTest extends TestCase {
 
-    private static final File testPharFile = new File("test-" + String.valueOf((System.currentTimeMillis() / 1000L)) + ".phar");
+    private static final String testPharFile = "test-" + String.valueOf((System.currentTimeMillis() / 1000L)) + ".phar";
 
     /**
      * Returns the test suite.
@@ -22,18 +22,17 @@ public class BasicTest extends TestCase {
     }
 
     @Override
-    public void setUp() {
-
+    public void setUp() throws Exception {
+        super.setUp();
     }
 
     public void testCreated() throws IOException, NoSuchAlgorithmException {
 
         // Create
-        Phar p = new Phar(testPharFile, PharCompression.BZIP2, "test.phar");
+        final Phar p = new Phar(testPharFile, PharCompression.BZIP2, "test.phar");
         p.add(new File("src/test/resources/Image"));
         p.setStub(new File("src/test/resources/stub.php"));
-        p.setMetadata(
-                new HashMap<String, String>() {
+        p.setMetadata(new HashMap<String, String>() {
             {
                 put("Author", "Nikolay Petrovski");
             }
@@ -42,17 +41,18 @@ public class BasicTest extends TestCase {
 
         p.write();
 
-        assertTrue(testPharFile.exists());
-        assertTrue(testPharFile.canRead());
+        assertTrue(p.exists());
+        assertTrue(p.canRead());
+        assertTrue(p.length() > 0);
 
     }
 
     public void testParse() throws IOException {
 
         // READ
-        Phar pa = new Phar(testPharFile);
+        final Phar pa = new Phar(testPharFile);
 
-        //assertEquals(PharCompression.BZIP2, pa.getCompression());
+        assertEquals(PharCompression.BZIP2, pa.getCompression());
         assertEquals("test.phar", pa.getAlias());
 
     }
