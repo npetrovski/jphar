@@ -18,6 +18,10 @@ enum
 	COMPRESSION_BZIP		= 0x00002000
 };
 
+struct Path {
+	DWORD len;
+	char name[len];
+};
 
 struct Stub {
 	struct StubString
@@ -36,8 +40,9 @@ struct SerializedMetadata {
 };
 
 struct EntryManifest {
-	DWORD filename_len;
-	char Filename[filename_len];
+
+    Path Filename;
+    
 	DWORD uncompressed_size;
 	DWORD Timestamp;
 	DWORD compressed_size;
@@ -72,13 +77,12 @@ visible:
 	$print("Version", v1 + "." + v2 + "." + v4);
 };
 
+
 struct Manifest {
 	DWORD len;
 	DWORD NumberOfFiles;
 
 	Version Version;
-
-	//SHORT Version;
 	
 	DWORD GlobalBitmappedFlags;
 	
@@ -96,8 +100,7 @@ struct Manifest {
 			phar_compression = "Unknown";
 	}
 	
-	DWORD alias_len;
-	char Alias[alias_len];
+	Path Alias;
 	
 	SerializedMetadata Metadata;
 	EntryManifest EntryManifest[NumberOfFiles];			
