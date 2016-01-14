@@ -31,7 +31,7 @@ struct Stub {
          $break_array(true);
     };
 
-    StubString code[*];
+    [color_scheme("Residency")] StubString code[*];
 };
 
 struct SerializedMetadata {
@@ -59,10 +59,18 @@ struct Compression {
 struct EntryManifest {
 
     Path Filename;
+	
+	if (Filename.name[Filename.len - 1] == '/') {
+		var isDirecotry = true;
+	} else {
+		var isDirecotry = false;
+	}
+	
+	$print("IsDirectory", isDirecotry);
     
-    DWORD uncompressed_size;
+    [color_scheme("Structure")] DWORD uncompressed_size;
     DWORD Timestamp;
-    DWORD compressed_size;
+    [color_scheme("Structure")] DWORD compressed_size;
     DWORD CRC32;
     
     Compression Compression;
@@ -81,9 +89,8 @@ visible:
     $print("Version", v1 + "." + v2 + "." + v4);
 };
 
-
 struct Manifest {
-    DWORD len;
+    [color_scheme("Size")] DWORD len;
     DWORD NumberOfFiles;
 
     Version Version;
@@ -112,5 +119,5 @@ public struct PharFile
     Stub                 Stub;
     Manifest             Manifest;
     File                 Data[Manifest.NumberOfFiles];
-    Signature             Signature;
+    [color_scheme("Residency")] Signature            Signature;
 };
