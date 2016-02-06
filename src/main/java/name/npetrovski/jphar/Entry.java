@@ -66,6 +66,18 @@ public class Entry implements Parsable {
         offset = is.getPosition();
         is.skip(entryManifest.getCompressedSize());
     }
+    
+    public String getName() {
+        return entryManifest.getUri().getName();
+    }
+    
+    public Integer getSize() {
+        return entryManifest.getUncompressedSize();
+    }
+    
+    public Integer getLastmodified() {
+        return entryManifest.getTimestamp();
+    }
 
     public InputStream getInputStream() throws IOException {
 

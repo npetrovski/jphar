@@ -9,10 +9,12 @@
         <CLASSES>
           <root url="phar://$MODULE_DIR$/codecept.phar/" />
           <root url="phar://$MODULE_DIR$/phpunit-5.2.1.phar/" />
+          <root url="phar://$MODULE_DIR$/test-1454782476.phar/" />
         </CLASSES>
         <SOURCES>
           <root url="phar://$MODULE_DIR$/codecept.phar/" />
           <root url="phar://$MODULE_DIR$/phpunit-5.2.1.phar/" />
+          <root url="phar://$MODULE_DIR$/test-1454782476.phar/" />
         </SOURCES>
       </library>
     </orderEntry>

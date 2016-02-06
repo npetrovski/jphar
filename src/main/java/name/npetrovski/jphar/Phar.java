@@ -26,14 +26,21 @@ public class Phar extends File {
 
     private Signature signature = new Signature();
 
-    public Phar(String pathname) throws IOException {
+    public Phar(String pathname) {
         super(pathname);
 
         if (super.exists() && super.isFile()) {
-            parse();
+            try {
+                parse();
+            } catch (IOException e) {
+            }
         } else {
-            manifest.getAlias().setName(this.getName());
+            manifest.getAlias().setName(getName());
         }
+    }
+    
+    public Phar(File file) {
+        this(file.getPath());
     }
 
     private interface EntryProvider {
@@ -143,7 +150,7 @@ public class Phar extends File {
     public final void parse() throws IOException {
         parse(new FileInputStream(this));
     }
-    
+
     public void setStub(String stub) {
         this.stub = new Stub(stub);
     }
@@ -151,11 +158,11 @@ public class Phar extends File {
     public void setStub(File stubFile) throws IOException {
         setStub(new String(Files.readAllBytes(stubFile.toPath())));
     }
-    
+
     public void setMetadata(Serializable meta) {
         this.manifest.getMetadata().setMeta(meta);
     }
-    
+
     public void parse(InputStream inp) throws IOException {
 
         try (PharInputStream is = new PharInputStream(inp)) {
