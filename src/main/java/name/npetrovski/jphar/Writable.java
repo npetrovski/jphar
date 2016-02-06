@@ -2,9 +2,7 @@ package name.npetrovski.jphar;
 
 import java.io.IOException;
 
-
-public interface PharWritable {
+public interface Writable {
 
     void write(PharOutputStream out) throws IOException;
-
 }

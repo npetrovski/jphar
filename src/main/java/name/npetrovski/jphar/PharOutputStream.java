@@ -6,7 +6,6 @@ import java.io.OutputStream;
 
 public final class PharOutputStream extends FilterOutputStream {
 
-
     public PharOutputStream(final OutputStream outputStream) {
         super(outputStream);
     }
@@ -18,14 +17,7 @@ public final class PharOutputStream extends FilterOutputStream {
         this.out.write((i >>> 24) & 0xFF);
     }
 
-    public void writeString(final String s) throws IOException {
-        if (s == null) {
-            throw new NullPointerException("String cannot be null");
-        }
-        this.out.write(s.getBytes(Phar.STRING_ENCODING));
-    }
-
-    public void write(final PharWritable writable) throws IOException {
+    public void write(final Writable writable) throws IOException {
         if (writable == null) {
             throw new NullPointerException("Writable cannot be null");
         }

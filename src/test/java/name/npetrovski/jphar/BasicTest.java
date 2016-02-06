@@ -29,8 +29,8 @@ public class BasicTest extends TestCase {
     public void testCreated() throws IOException, NoSuchAlgorithmException {
 
         // Create
-        final Phar p = new Phar(testPharFile, PharCompression.BZIP2, "test.phar");
-        p.add(new File("src/test/resources/Image"));
+        final Phar p = new Phar(testPharFile);
+        p.add(new File("src/test/resources/Image"), Compression.Type.ZLIB);
         p.setStub(new File("src/test/resources/stub.php"));
         p.setMetadata(new HashMap<String, String>() {
             {
@@ -52,9 +52,7 @@ public class BasicTest extends TestCase {
         // READ
         final Phar pa = new Phar(testPharFile);
 
-        assertEquals(PharCompression.BZIP2, pa.getCompression());
-        assertEquals("test.phar", pa.getAlias());
-
+        assertEquals(Compression.Type.ZLIB, pa.getManifest().getCompression().getType());
     }
 
     @Override

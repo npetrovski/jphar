@@ -1,23 +1,21 @@
 package name.npetrovski.jphar;
 
+import java.io.IOException;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+import lombok.Data;
 
-public final class PharVersion {
+@Data
+public class Version implements Parsable, Writable {
 
-    /**
-     * Utility class. Can't instantiate.
-     */
-    private PharVersion() {
-        throw new AssertionError();
-    }
+    private String version = "1.1.1";
 
     public static String getVersionString(byte[] a) {
         StringBuilder sb = new StringBuilder(a.length * 2);
         for (byte b : a) {
             sb.append(String.format("%02x", b & 0xff));
         }
-        char[] version =  new char[] {sb.charAt(0), '.', sb.charAt(1), '.', sb.charAt(2)};
-        
+        char[] version = new char[]{sb.charAt(0), '.', sb.charAt(1), '.', sb.charAt(2)};
+
         return new String(version);
     }
 
@@ -52,4 +50,20 @@ public final class PharVersion {
         return nibbles;
     }
 
+    @Override
+    public void parse(PharInputStream is) throws IOException {
+        byte[] v = new byte[2];
+        is.read(v, 0, 2);
+        version = getVersionString(v);
+    }
+
+    @Override
+    public void write(PharOutputStream out) throws IOException {
+        out.write(getVersionNibbles(version));
+    }
+    
+    @Override
+    public String toString() {
+        return this.version;
+    }
 }

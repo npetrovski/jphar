@@ -28,6 +28,12 @@ public class PharInputStream extends FilterInputStream {
     }
 
     @Override
+    public long skip(long n) throws IOException {
+        pos += n;
+        return super.skip(n);
+    }
+    
+    @Override
     public synchronized int read()
             throws IOException {
         int b = super.read();
