@@ -24,10 +24,14 @@ public class Entry implements Parsable {
 
     private File source;
 
-    private EntryManifest entryManifest;
+    private EntryManifest entryManifest = new EntryManifest();
 
     public Entry(EntryManifest em) {
         this.entryManifest = em;
+    }
+    
+    public Entry(String name) {
+        this.entryManifest.getUri().setName(name);
     }
 
     public static Entry createFromFile(File file, Compression.Type compression)

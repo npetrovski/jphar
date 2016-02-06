@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,7 +21,7 @@ public class Phar extends File {
 
     private Manifest manifest = new Manifest();
 
-    private List<Entry> entries = new ArrayList<>();
+    private List<Entry> entries = new LinkedList<>();
 
     private Signature signature = new Signature();
 
@@ -38,7 +37,7 @@ public class Phar extends File {
             manifest.getAlias().setName(getName());
         }
     }
-    
+
     public Phar(File file) {
         this(file.getPath());
     }
@@ -147,10 +146,6 @@ public class Phar extends File {
         }
     }
 
-    public final void parse() throws IOException {
-        parse(new FileInputStream(this));
-    }
-
     public void setStub(String stub) {
         this.stub = new Stub(stub);
     }
@@ -160,7 +155,11 @@ public class Phar extends File {
     }
 
     public void setMetadata(Serializable meta) {
-        this.manifest.getMetadata().setMeta(meta);
+        manifest.getMetadata().setMeta(meta);
+    }
+
+    public final void parse() throws IOException {
+        parse(new FileInputStream(this));
     }
 
     public void parse(InputStream inp) throws IOException {
@@ -207,10 +206,9 @@ public class Phar extends File {
 
     public Entry findEntry(String name) {
         for (Iterator<Entry> it = entries.iterator(); it.hasNext();) {
-            Entry e = it.next();
-            if (e.getEntryManifest().getUri().getName().equals(name)
-                    || e.getEntryManifest().getUri().getName().equals(name + "/")) {
-                return e;
+            Entry entry = it.next();
+            if (entry.getName().equals(name) || entry.getName().equals(name + "/")) {
+                return entry;
             }
         }
 
@@ -219,13 +217,66 @@ public class Phar extends File {
 
     @Override
     public String[] list() {
-        List<String> list = new ArrayList<>();
+        List<String> list = new LinkedList<>();
 
         for (EntryManifest e : manifest.getEntryManifest()) {
             list.add(e.getUri().getName());
         }
 
         return list.toArray(new String[list.size()]);
+    }
+
+    public String[] list(String folder) {
+        List<String> list = new LinkedList<>();
+        for (EntryManifest e : manifest.getEntryManifest()) {
+            if (e.getUri().getName().startsWith(folder)) {
+                list.add(e.getUri().getName());
+            }
+        }
+        return list.toArray(new String[list.size()]);
+    }
+
+    public void rm(final String name) {
+        for (Iterator<Entry> it = entries.iterator(); it.hasNext();) {
+            Entry entry = it.next();
+            if (entry.getName().equals(name)) {
+                manifest.getEntryManifest().remove(entry.getEntryManifest());
+                it.remove();
+            }
+        }
+    }
+    
+    public void rmdir(final String folder) {
+        for (Iterator<Entry> it = entries.iterator(); it.hasNext();) {
+            Entry entry = it.next();
+            if (entry.getName().startsWith(folder)) {
+                manifest.getEntryManifest().remove(entry.getEntryManifest());
+                it.remove();
+            }
+        }
+    }
+
+    public boolean mkdir(String folder) throws IOException {
+        if (folder.endsWith("/")) {
+            folder = folder + "/";
+        }
+        
+        for (Entry entry : entries) {
+            if (entry.getName().startsWith(folder))
+                return false;
+        }
+        
+        final String folderName = folder;
+        add(new EntryProvider() {
+            @Override
+            public List<Entry> getPharEntries() throws IOException {
+                List<Entry> list = new LinkedList<>();
+                list.add(new Entry(folderName));
+                return list;
+            }
+        });
+        
+        return true;
     }
 
 }
