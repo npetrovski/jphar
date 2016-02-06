@@ -6,8 +6,14 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">
       <library name="PHARS">
-        <CLASSES />
-        <SOURCES />
+        <CLASSES>
+          <root url="phar://$MODULE_DIR$/codecept.phar/" />
+          <root url="phar://$MODULE_DIR$/phpunit-5.2.1.phar/" />
+        </CLASSES>
+        <SOURCES>
+          <root url="phar://$MODULE_DIR$/codecept.phar/" />
+          <root url="phar://$MODULE_DIR$/phpunit-5.2.1.phar/" />
+        </SOURCES>
       </library>
     </orderEntry>
   </component>

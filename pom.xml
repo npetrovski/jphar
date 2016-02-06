@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>name.npetrovski.jphar</groupId>
     <artifactId>jphar</artifactId>
-    <name>jphar2</name>
+    <name>jphar</name>
     <description>Java library for managing PHP phar archives</description>
     <version>2.0.0</version>
 
