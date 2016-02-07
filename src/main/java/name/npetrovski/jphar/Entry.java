@@ -3,6 +3,7 @@ package name.npetrovski.jphar;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -78,17 +79,25 @@ public class Entry implements Readable, Writable {
 
     public InputStream getInputStream() throws IOException {
 
-        int size = entryManifest.getCompressedSize();
-        if (!isDirectory() && size > 0) {
-            try (RandomAccessFile raf = new RandomAccessFile(source, "r")) {
+        if (null != source && source.exists() && source.isFile()) {
 
-                byte[] data = new byte[size];
+            if (null != offset) {
+                int size = entryManifest.getCompressedSize();
+                if (!isDirectory() && size > 0) {
+                    try (RandomAccessFile raf = new RandomAccessFile(source, "r")) {
 
-                raf.seek(offset);
-                raf.read(data, 0, size);
-                raf.close();
+                        byte[] data = new byte[size];
 
-                return getCompressorInputStream(new ByteArrayInputStream(data), entryManifest.getCompression().getType());
+                        raf.seek(offset);
+                        raf.read(data, 0, size);
+                        raf.close();
+
+                        return getCompressorInputStream(new ByteArrayInputStream(data),
+                                entryManifest.getCompression().getType());
+                    }
+                }
+            } else {
+                return new FileInputStream(source);
             }
         }
 
@@ -96,11 +105,19 @@ public class Entry implements Readable, Writable {
     }
 
     public OutputStream getOutputStream() throws IOException {
-        if (source.isFile()) {
-            ByteArrayOutputStream result = new ByteArrayOutputStream();
 
-            try (OutputStream compressor = getCompressorOutputStream(result, entryManifest.getCompression().getType())) {
-                Files.copy(source.toPath(), compressor);
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        InputStream is = getInputStream();
+
+        if (null != is) {
+            try (OutputStream compressor = getCompressorOutputStream(result,
+                    entryManifest.getCompression().getType())) {
+
+                byte[] buffer = new byte[1024];
+                for (int n = 0; n >= 0; n = is.read(buffer)) {
+                    compressor.write(buffer, 0, n);
+                }
+                is.close();
                 compressor.flush();
                 compressor.close();
 

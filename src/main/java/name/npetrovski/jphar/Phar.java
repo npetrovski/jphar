@@ -30,7 +30,7 @@ public class Phar extends File {
 
         if (super.exists() && super.isFile()) {
             try {
-                parse();
+                read();
             } catch (IOException e) {
             }
         } else {
@@ -158,11 +158,11 @@ public class Phar extends File {
         manifest.getMetadata().setMeta(meta);
     }
 
-    public final void parse() throws IOException {
-        parse(new FileInputStream(this));
+    private void read() throws IOException {
+        read(new FileInputStream(this));
     }
 
-    public void parse(InputStream inp) throws IOException {
+    private void read(InputStream inp) throws IOException {
 
         try (PharInputStream is = new PharInputStream(inp)) {
 
@@ -184,7 +184,8 @@ public class Phar extends File {
     }
 
     public void write() throws IOException {
-        try (PharOutputStream out = new PharOutputStream(new FileOutputStream(this))) {
+        ByteArrayOutputStream data = new ByteArrayOutputStream();
+        try (PharOutputStream out = new PharOutputStream(data)) {
             // Prepare entry data
             ByteArrayOutputStream entryData = new ByteArrayOutputStream();
             try (PharOutputStream pos = new PharOutputStream(entryData)) {
@@ -199,9 +200,16 @@ public class Phar extends File {
             out.write(entryData.toByteArray());
             out.flush();
             
+        }
+        
+        try (PharOutputStream phar = new PharOutputStream(new FileOutputStream(this))) {
+            phar.write(data.toByteArray());
+            phar.flush();
+            
             signature.calcSignature(this);
-            out.write(signature);
-            out.flush();
+            phar.write(signature);
+            phar.flush();
+            phar.close();
         }
     }
 
