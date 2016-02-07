@@ -7,7 +7,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class Manifest implements Parsable, Writable {
+public class Manifest implements Readable, Writable {
 
     private Integer len = 0;
 
@@ -17,28 +17,28 @@ public class Manifest implements Parsable, Writable {
 
     private Compression compression = new Compression();
 
-    private Path alias = new Path();
+    private Name alias = new Name();
 
     private Metadata metadata = new Metadata();
 
     private List<EntryManifest> entryManifest = new ArrayList<>();
 
     @Override
-    public void parse(PharInputStream is) throws IOException {
+    public void read(PharInputStream is) throws IOException {
         len = is.readRInt() + 4;
         numberOfFiles = is.readRInt();
 
-        version.parse(is);
+        version.read(is);
 
-        compression.parse(is);
+        compression.read(is);
 
-        alias.parse(is);
+        alias.read(is);
 
-        metadata.parse(is);
+        metadata.read(is);
 
         for (int i = 0; i < numberOfFiles; i++) {
             EntryManifest em = new EntryManifest();
-            em.parse(is);
+            em.read(is);
             entryManifest.add(em);
         }
 
@@ -64,7 +64,7 @@ public class Manifest implements Parsable, Writable {
         int globalCompressionFlag = Compression.BITMAP_SIGNATURE_FLAG | globalZlibFlag | globalBzipFlag;
 
         try (PharOutputStream buffer = new PharOutputStream(byteArrayOutputStream)) {
-            buffer.writeInt(numberOfFiles);
+            buffer.writeInt(entryManifest.size());
             buffer.write(version);
             buffer.writeInt(globalCompressionFlag);
             buffer.write(alias);

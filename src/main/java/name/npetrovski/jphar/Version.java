@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import lombok.Data;
 
 @Data
-public class Version implements Parsable, Writable {
+public class Version implements Readable, Writable {
 
     private String version = "1.1.1";
 
@@ -51,7 +51,7 @@ public class Version implements Parsable, Writable {
     }
 
     @Override
-    public void parse(PharInputStream is) throws IOException {
+    public void read(PharInputStream is) throws IOException {
         byte[] v = new byte[2];
         is.read(v, 0, 2);
         version = getVersionString(v);

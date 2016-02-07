@@ -4,12 +4,12 @@ import java.io.IOException;
 import lombok.Data;
 
 @Data
-public class Path implements Parsable, Writable {
+public class Name implements Readable, Writable {
 
     private String name = "";
 
     @Override
-    public void parse(PharInputStream is) throws IOException {
+    public void read(PharInputStream is) throws IOException {
         int len = is.readRInt();
         if (len > 0) {
             byte[] nameBytes = new byte[len];

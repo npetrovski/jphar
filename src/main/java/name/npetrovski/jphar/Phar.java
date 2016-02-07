@@ -105,7 +105,7 @@ public class Phar extends File {
                             path = path + "/";
                         }
                         Entry entry = Entry.createFromFile(file, compression);
-                        entry.getEntryManifest().getUri().setName(path.replace("\\", "/"));
+                        entry.getEntryManifest().getPath().setName(path.replace("\\", "/"));
                         pharEntries.add(entry);
                     }
                 }
@@ -166,42 +166,43 @@ public class Phar extends File {
 
         try (PharInputStream is = new PharInputStream(inp)) {
 
-            stub.parse(is);
+            stub.read(is);
 
-            manifest.parse(is);
+            manifest.read(is);
 
             for (EntryManifest e : manifest.getEntryManifest()) {
                 Entry entry = new Entry(e);
                 entry.setSource(this);
-                entry.parse(is);
+                entry.read(is);
                 entries.add(entry);
             }
 
-            signature.parse(is);
+            signature.read(is);
 
             is.close();
         }
     }
 
     public void write() throws IOException {
-
-        PharOutputStream out = new PharOutputStream(new FileOutputStream(this));
-
-        out.write(stub);
-        out.write(manifest);
-        for (Entry entry : entries) {
-            ByteArrayOutputStream stream = entry.getOutputStream();
-            if (null != stream) {
-                out.write(stream.toByteArray());
+        try (PharOutputStream out = new PharOutputStream(new FileOutputStream(this))) {
+            // Prepare entry data
+            ByteArrayOutputStream entryData = new ByteArrayOutputStream();
+            try (PharOutputStream pos = new PharOutputStream(entryData)) {
+                for (Entry entry : entries) {
+                    pos.write(entry);
+                }
+                pos.flush();
             }
+            
+            out.write(stub);
+            out.write(manifest);
+            out.write(entryData.toByteArray());
+            out.flush();
+            
+            signature.calcSignature(this);
+            out.write(signature);
+            out.flush();
         }
-        out.flush();
-
-        signature.calcSignature(this);
-        out.write(signature);
-
-        out.flush();
-        out.close();
     }
 
     public Entry findEntry(String name) {
@@ -220,7 +221,7 @@ public class Phar extends File {
         List<String> list = new LinkedList<>();
 
         for (EntryManifest e : manifest.getEntryManifest()) {
-            list.add(e.getUri().getName());
+            list.add(e.getPath().toString());
         }
 
         return list.toArray(new String[list.size()]);
@@ -229,8 +230,8 @@ public class Phar extends File {
     public String[] list(String folder) {
         List<String> list = new LinkedList<>();
         for (EntryManifest e : manifest.getEntryManifest()) {
-            if (e.getUri().getName().startsWith(folder)) {
-                list.add(e.getUri().getName());
+            if (e.getPath().toString().startsWith(folder)) {
+                list.add(e.getPath().toString());
             }
         }
         return list.toArray(new String[list.size()]);

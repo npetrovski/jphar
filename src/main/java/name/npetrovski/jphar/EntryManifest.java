@@ -4,9 +4,9 @@ import java.io.IOException;
 import lombok.Data;
 
 @Data
-public class EntryManifest implements Parsable, Writable {
+public class EntryManifest implements Readable, Writable {
 
-    private Path uri = new Path();
+    private Name path = new Name();
     private Integer uncompressedSize = 0;
     private Integer timestamp = 0;
     private Integer compressedSize = 0;
@@ -15,9 +15,9 @@ public class EntryManifest implements Parsable, Writable {
     private Metadata metadata = new Metadata();
 
     @Override
-    public void parse(PharInputStream is) throws IOException {
+    public void read(PharInputStream is) throws IOException {
 
-        uri.parse(is);
+        path.read(is);
 
         uncompressedSize = is.readRInt();
 
@@ -27,14 +27,14 @@ public class EntryManifest implements Parsable, Writable {
 
         CRC32 = is.readRInt();
 
-        compression.parse(is);
+        compression.read(is);
 
-        metadata.parse(is);
+        metadata.read(is);
     }
 
     @Override
     public void write(PharOutputStream out) throws IOException {
-        out.write(uri);
+        out.write(path);
         out.writeInt(uncompressedSize);
         out.writeInt(timestamp);
         out.writeInt(compressedSize);
@@ -42,18 +42,18 @@ public class EntryManifest implements Parsable, Writable {
         out.write(compression);
         out.write(metadata);
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Path: " + uri + "\n");
-        sb.append("UncompressedSize: " + uncompressedSize + "\n");
-        sb.append("Timestamp: " + timestamp + "\n");
-        sb.append("CompressedSize: " + compressedSize + "\n");
-        sb.append("CRC32: " + CRC32 + "\n");
-        sb.append("Compression: " + compression + "\n");
-        sb.append("Metadata: " + metadata + "\n");
-        
+        sb.append("Name: ").append(path).append("\n")
+            .append("UncompressedSize: ").append(uncompressedSize).append("\n")
+            .append("Timestamp: ").append(timestamp).append("\n")
+            .append("CompressedSize: ").append(compressedSize).append("\n")
+            .append("CRC32: ").append(CRC32).append("\n")
+            .append("Compression: ").append(compression).append("\n")
+            .append("Metadata: ").append(metadata).append("\n");
+
         return sb.toString();
     }
 

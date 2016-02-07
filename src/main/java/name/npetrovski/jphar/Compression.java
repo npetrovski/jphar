@@ -4,7 +4,7 @@ import java.io.IOException;
 import lombok.Data;
 
 @Data
-public class Compression implements Parsable, Writable {
+public class Compression implements Readable, Writable {
 
     static final int BITMAP_SIGNATURE_FLAG = 0x00010000;
     
@@ -37,7 +37,7 @@ public class Compression implements Parsable, Writable {
     }
 
     @Override
-    public void parse(PharInputStream is) throws IOException {
+    public void read(PharInputStream is) throws IOException {
         int f = is.readRInt();
         type = Compression.Type.getEnumByInt(f & 0x0000f000);
     }

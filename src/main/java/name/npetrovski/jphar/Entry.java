@@ -18,7 +18,7 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 
 @Data
-public class Entry implements Parsable {
+public class Entry implements Readable, Writable {
 
     private Long offset;
 
@@ -29,9 +29,9 @@ public class Entry implements Parsable {
     public Entry(EntryManifest em) {
         this.entryManifest = em;
     }
-    
+
     public Entry(String name) {
-        this.entryManifest.getUri().setName(name);
+        this.entryManifest.getPath().setName(name);
     }
 
     public static Entry createFromFile(File file, Compression.Type compression)
@@ -40,7 +40,7 @@ public class Entry implements Parsable {
         EntryManifest em = new EntryManifest();
         em.getCompression().setType(compression);
         em.setTimestamp((int) file.lastModified() / 1000);
-        em.getUri().setName(file.toPath().toString().replace("\\", "/"));
+        em.getPath().setName(file.toPath().toString().replace("\\", "/"));
 
         Entry entry = new Entry(em);
         entry.setSource(file);
@@ -54,7 +54,6 @@ public class Entry implements Parsable {
 
             em.setCRC32((int) crc.getValue());
             em.setUncompressedSize(data.length);
-            em.setCompressedSize(entry.getOutputStream().toByteArray().length);
         }
 
         return entry;
@@ -62,23 +61,17 @@ public class Entry implements Parsable {
     }
 
     public boolean isDirectory() {
-        return this.entryManifest.getUri().getName().endsWith("/");
+        return getName().endsWith("/");
     }
 
-    @Override
-    public void parse(PharInputStream is) throws IOException {
-        offset = is.getPosition();
-        is.skip(entryManifest.getCompressedSize());
-    }
-    
     public String getName() {
-        return entryManifest.getUri().getName();
+        return entryManifest.getPath().toString();
     }
-    
+
     public Integer getSize() {
         return entryManifest.getUncompressedSize();
     }
-    
+
     public Integer getLastmodified() {
         return entryManifest.getTimestamp();
     }
@@ -102,7 +95,7 @@ public class Entry implements Parsable {
         return null;
     }
 
-    public ByteArrayOutputStream getOutputStream() throws IOException {
+    public OutputStream getOutputStream() throws IOException {
         if (source.isFile()) {
             ByteArrayOutputStream result = new ByteArrayOutputStream();
 
@@ -142,6 +135,23 @@ public class Entry implements Parsable {
                 return os;
             default:
                 throw new IOException("Unsupported compression type.");
+        }
+    }
+
+    @Override
+    public void read(PharInputStream is) throws IOException {
+        offset = is.getPosition();
+        is.skip(entryManifest.getCompressedSize());
+    }
+
+    @Override
+    public void write(PharOutputStream out) throws IOException {
+
+        ByteArrayOutputStream compressedData = (ByteArrayOutputStream) getOutputStream();
+        if (null != compressedData) {
+            this.entryManifest.setCompressedSize(compressedData.toByteArray().length);
+
+            out.write(compressedData.toByteArray());
         }
     }
 

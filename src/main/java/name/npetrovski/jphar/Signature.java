@@ -10,7 +10,7 @@ import java.util.Arrays;
 import lombok.Data;
 
 @Data
-public class Signature implements Parsable, Writable {
+public class Signature implements Readable, Writable {
 
     private byte[] signature;
 
@@ -52,7 +52,7 @@ public class Signature implements Parsable, Writable {
     }
 
     @Override
-    public void parse(PharInputStream is) throws IOException {
+    public void read(PharInputStream is) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
         int b;

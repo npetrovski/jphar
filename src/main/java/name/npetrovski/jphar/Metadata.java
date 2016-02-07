@@ -6,12 +6,12 @@ import java.io.Serializable;
 import lombok.Data;
 
 @Data
-public class Metadata implements Parsable, Writable {
+public class Metadata implements Readable, Writable {
 
     private Serializable meta;
 
     @Override
-    public void parse(PharInputStream is) throws IOException {
+    public void read(PharInputStream is) throws IOException {
         int len = is.readRInt();
 
         if (len > 0) {

@@ -4,7 +4,7 @@ import java.io.IOException;
 import lombok.Data;
 
 @Data
-public class Stub implements Parsable, Writable {
+public class Stub implements Readable, Writable {
 
     static final String DEFAULT_STUB = "<?php\n__HALT_COMPILER(); ?>\n";
 
@@ -19,7 +19,7 @@ public class Stub implements Parsable, Writable {
     }
 
     @Override
-    public void parse(PharInputStream is) throws IOException {
+    public void read(PharInputStream is) throws IOException {
         int c;
         code = "";
         while ((c = is.read()) != -1) {
