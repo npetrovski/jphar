@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License
  *
  * Copyright 2016 npetrovski.
@@ -44,7 +44,7 @@ public class Phar extends File {
 
     private Manifest manifest = new Manifest();
 
-    private List<Entry> entries = new LinkedList<>();
+    private List<DataEntry> entries = new LinkedList<>();
 
     private Signature signature = new Signature();
 
@@ -67,7 +67,7 @@ public class Phar extends File {
 
     private interface EntryProvider {
 
-        List<Entry> getPharEntries() throws IOException;
+        List<DataEntry> getPharEntries() throws IOException;
     }
 
     private final class FileEntryProvider implements EntryProvider {
@@ -81,11 +81,11 @@ public class Phar extends File {
         }
 
         @Override
-        public List<Entry> getPharEntries()
+        public List<DataEntry> getPharEntries()
                 throws IOException {
-            return new LinkedList<Entry>() {
+            return new LinkedList<DataEntry>() {
                 {
-                    add(Entry.createFromFile(file, compression));
+                    add(DataEntry.createFromFile(file, compression));
                 }
             };
         }
@@ -104,15 +104,15 @@ public class Phar extends File {
         }
 
         @Override
-        public List<Entry> getPharEntries()
+        public List<DataEntry> getPharEntries()
                 throws IOException {
-            List<Entry> pharEntries = new LinkedList<>();
+            List<DataEntry> pharEntries = new LinkedList<>();
             addPharEntriesRecursively(pharEntries, source.toPath());
             return pharEntries;
 
         }
 
-        private void addPharEntriesRecursively(final List<Entry> pharEntries, final java.nio.file.Path directory)
+        private void addPharEntriesRecursively(final List<DataEntry> pharEntries, final java.nio.file.Path directory)
                 throws IOException {
             try (DirectoryStream<java.nio.file.Path> directoryStream = Files.newDirectoryStream(directory)) {
                 for (java.nio.file.Path element : directoryStream) {
@@ -127,7 +127,7 @@ public class Phar extends File {
                         if (file.isDirectory()) {
                             path = path + "/";
                         }
-                        Entry entry = Entry.createFromFile(file, compression);
+                        DataEntry entry = DataEntry.createFromFile(file, compression);
                         entry.getEntryManifest().getPath().setName(path.replace("\\", "/"));
                         pharEntries.add(entry);
                     }
@@ -162,7 +162,7 @@ public class Phar extends File {
     }
 
     private void add(final EntryProvider pharEntryProvider) throws IOException {
-        for (Entry entry : pharEntryProvider.getPharEntries()) {
+        for (DataEntry entry : pharEntryProvider.getPharEntries()) {
             entries.add(entry);
             manifest.getEntryManifest().add(entry.getEntryManifest());
             manifest.setNumberOfFiles(entries.size());
@@ -175,6 +175,7 @@ public class Phar extends File {
 
     public void setStub(File stubFile) throws IOException {
         setStub(new String(Files.readAllBytes(stubFile.toPath())));
+        this.stub.setLastModified((int) stubFile.lastModified() / 1000);
     }
 
     public void setMetadata(Serializable meta) {
@@ -194,7 +195,7 @@ public class Phar extends File {
             manifest.read(is);
 
             for (EntryManifest e : manifest.getEntryManifest()) {
-                Entry entry = new Entry(e);
+                DataEntry entry = new DataEntry(e);
                 entry.setSource(this);
                 entry.read(is);
                 entries.add(entry);
@@ -212,23 +213,23 @@ public class Phar extends File {
             // Prepare entry data
             ByteArrayOutputStream entryData = new ByteArrayOutputStream();
             try (PharOutputStream pos = new PharOutputStream(entryData)) {
-                for (Entry entry : entries) {
+                for (DataEntry entry : entries) {
                     pos.write(entry);
                 }
                 pos.flush();
             }
-            
+
             out.write(stub);
             out.write(manifest);
             out.write(entryData.toByteArray());
             out.flush();
-            
+
         }
-        
+
         try (PharOutputStream phar = new PharOutputStream(new FileOutputStream(this))) {
             phar.write(data.toByteArray());
             phar.flush();
-            
+
             signature.calcSignature(this);
             phar.write(signature);
             phar.flush();
@@ -237,8 +238,13 @@ public class Phar extends File {
     }
 
     public Entry findEntry(String name) {
-        for (Iterator<Entry> it = entries.iterator(); it.hasNext();) {
-            Entry entry = it.next();
+
+        if (name.equals(Stub.DEFAULT_PATH)) {
+            return stub;
+        }
+
+        for (Iterator<DataEntry> it = entries.iterator(); it.hasNext();) {
+            DataEntry entry = it.next();
             if (entry.getName().equals(name) || entry.getName().equals(name + "/")) {
                 return entry;
             }
@@ -250,7 +256,7 @@ public class Phar extends File {
     @Override
     public String[] list() {
         List<String> list = new LinkedList<>();
-
+        list.add(Stub.DEFAULT_PATH);
         for (EntryManifest e : manifest.getEntryManifest()) {
             list.add(e.getPath().toString());
         }
@@ -260,54 +266,61 @@ public class Phar extends File {
 
     public String[] list(String folder) {
         List<String> list = new LinkedList<>();
-        for (EntryManifest e : manifest.getEntryManifest()) {
-            if (e.getPath().toString().startsWith(folder)) {
-                list.add(e.getPath().toString());
+
+        for (String s : list()) {
+            if (s.startsWith(folder)) {
+                list.add(s);
             }
         }
+
         return list.toArray(new String[list.size()]);
     }
 
     public void rm(final String name) {
-        for (Iterator<Entry> it = entries.iterator(); it.hasNext();) {
-            Entry entry = it.next();
+        for (Iterator<DataEntry> it = entries.iterator(); it.hasNext();) {
+            DataEntry entry = it.next();
             if (entry.getName().equals(name)) {
                 manifest.getEntryManifest().remove(entry.getEntryManifest());
                 it.remove();
             }
         }
+
+        manifest.setNumberOfFiles(entries.size());
     }
-    
+
     public void rmdir(final String folder) {
-        for (Iterator<Entry> it = entries.iterator(); it.hasNext();) {
-            Entry entry = it.next();
+        for (Iterator<DataEntry> it = entries.iterator(); it.hasNext();) {
+            DataEntry entry = it.next();
             if (entry.getName().startsWith(folder)) {
                 manifest.getEntryManifest().remove(entry.getEntryManifest());
                 it.remove();
             }
         }
+
+        manifest.setNumberOfFiles(entries.size());
     }
 
     public boolean mkdir(String folder) throws IOException {
         if (folder.endsWith("/")) {
             folder = folder + "/";
         }
-        
-        for (Entry entry : entries) {
-            if (entry.getName().startsWith(folder))
+
+        for (DataEntry entry : entries) {
+            if (entry.getName().startsWith(folder)) {
                 return false;
+            }
         }
-        
+
         final String folderName = folder;
         add(new EntryProvider() {
             @Override
-            public List<Entry> getPharEntries() throws IOException {
-                List<Entry> list = new LinkedList<>();
-                list.add(new Entry(folderName));
+            public List<DataEntry> getPharEntries() throws IOException {
+                List<DataEntry> list = new LinkedList<>();
+                list.add(new DataEntry(folderName));
                 return list;
             }
         });
-        
+
         return true;
     }
 

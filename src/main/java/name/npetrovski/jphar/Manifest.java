@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License
  *
  * Copyright 2016 npetrovski.
@@ -87,7 +87,7 @@ public class Manifest implements Readable, Writable {
         int globalCompressionFlag = Compression.BITMAP_SIGNATURE_FLAG | globalZlibFlag | globalBzipFlag;
 
         try (PharOutputStream buffer = new PharOutputStream(byteArrayOutputStream)) {
-            buffer.writeInt(entryManifest.size());
+            buffer.writeInt(numberOfFiles);
             buffer.write(version);
             buffer.writeInt(globalCompressionFlag);
             buffer.write(alias);

@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License
  *
  * Copyright 2016 npetrovski.
@@ -23,22 +23,73 @@
  */
 package name.npetrovski.jphar;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import lombok.Data;
 
 @Data
-public class Stub implements Readable, Writable {
+public class Stub implements Entry, Readable, Writable {
 
     static final String DEFAULT_STUB = "<?php\n__HALT_COMPILER(); ?>\n";
 
-    private String code = "";
+    static final String DEFAULT_PATH = ".phar/stub.php";
+
+    private String code = DEFAULT_STUB;
+
+    private Integer lastModified = (int) (System.currentTimeMillis() / 1000);
 
     public Stub() {
         this(DEFAULT_STUB);
     }
 
-    public Stub(String code) {
+    public Stub(final String code) {
+        assert(code.contains("__HALT_COMPILER"));
         this.code = code;
+    }
+
+    @Override
+    public String getName() {
+        return DEFAULT_PATH;
+    }
+
+    @Override
+    public Integer getSize() {
+        return code.length();
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return false;
+    }
+
+    @Override
+    public Integer getLastmodified() {
+        return lastModified;
+    }
+
+    @Override
+    public InputStream getInputStream() {
+        if (code.charAt(code.length() - 1) != '\r' && code.charAt(code.length() - 1) != '\n') {
+            code = code + "\n";
+        }
+        return new ByteArrayInputStream(code.getBytes());
+    }
+
+    @Override
+    public OutputStream getOutputStream() throws IOException {
+        try (InputStream is = getInputStream()) {
+            ByteArrayOutputStream data = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            for (int n = 0; n >= 0; n = is.read(buffer)) {
+                data.write(buffer, 0, n);
+            }
+            data.close();
+
+            return data;
+        }
     }
 
     @Override
@@ -56,10 +107,8 @@ public class Stub implements Readable, Writable {
 
     @Override
     public void write(PharOutputStream out) throws IOException {
-        if (code.charAt(code.length() - 1) != '\r' && code.charAt(code.length() - 1) != '\n') {
-            code = code + "\n";
-        }
-        out.write(code.getBytes("UTF-8"));
+        ByteArrayOutputStream data = (ByteArrayOutputStream) getOutputStream();
+        out.write(data.toByteArray());
     }
 
     @Override

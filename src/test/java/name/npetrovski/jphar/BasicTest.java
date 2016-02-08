@@ -2,7 +2,6 @@ package name.npetrovski.jphar;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import junit.framework.Test;
@@ -61,13 +60,13 @@ public class BasicTest extends TestCase {
         assertEquals(965, p.getEntries().size());
         assertEquals(Compression.Type.ZLIB, p.getManifest().getCompression().getType());
         assertEquals("1.1.0", p.getManifest().getVersion().getVersion());
-        
+
         Entry entry = p.findEntry("src/Codeception/Events.php");
-   
+
         assertNotNull(entry);
-        
+
         String data = new String(IOUtils.toByteArray(entry.getInputStream()));
-        
+
         assertTrue(data.contains("SUITE_INIT"));
     }
 
