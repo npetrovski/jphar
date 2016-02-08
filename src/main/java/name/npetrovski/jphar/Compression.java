@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License
  *
  * Copyright 2016 npetrovski.
@@ -30,7 +30,7 @@ import lombok.Data;
 public class Compression implements Readable, Writable {
 
     static final int BITMAP_SIGNATURE_FLAG = 0x00010000;
-    
+
     private Compression.Type type = Compression.Type.NONE;
 
     public enum Type {
@@ -44,7 +44,7 @@ public class Compression implements Readable, Writable {
         private Type(final int i) {
             this.flag = i;
         }
-        
+
         public int getFlag() {
             return this.flag;
         }
@@ -64,14 +64,14 @@ public class Compression implements Readable, Writable {
         int f = is.readRInt();
         type = Compression.Type.getEnumByInt(f & 0x0000f000);
     }
-    
+
     @Override
     public void write(PharOutputStream out) throws IOException {
         out.writeInt(type.getFlag());
     }
-    
+
     @Override
     public String toString() {
-        return new String(type.name());
+        return type.name();
     }
 }

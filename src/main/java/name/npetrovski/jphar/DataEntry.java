@@ -58,6 +58,14 @@ public class DataEntry implements Entry, Readable, Writable {
         this.entryManifest.getPath().setName(name);
     }
 
+    /**
+     * Create entry from file
+     *
+     * @param file
+     * @param compression
+     * @return
+     * @throws IOException
+     */
     public static DataEntry createFromFile(File file, Compression.Type compression)
             throws IOException {
 
