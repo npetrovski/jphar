@@ -97,7 +97,6 @@ public class Stub implements Entry, Readable, Writable {
         int c;
         code = "";
         while ((c = is.read()) != -1) {
-
             code = code.concat(Character.toString((char) c));
             if (code.length() >= 3 && (code.endsWith("?>\r\n") || code.endsWith("?>\n"))) {
                 break;

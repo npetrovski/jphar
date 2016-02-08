@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License
  *
  * Copyright 2016 npetrovski.
@@ -30,10 +30,14 @@ import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import lombok.Data;
 
 @Data
 public class Signature implements Readable, Writable {
+
+    private static final Logger LOGGER = Logger.getLogger(Signature.class.getName());
 
     private byte[] signature;
 
@@ -93,6 +97,19 @@ public class Signature implements Readable, Writable {
                 + (typedata[1] << 8) + (typedata[0] << 0));
     }
 
+    @Override
+    public void write(PharOutputStream out) throws IOException {
+        out.write(signature);
+        out.writeInt(type.getFlag());
+        out.write(magic);
+    }
+
+    /**
+     * Calculate file signature
+     *
+     * @param file
+     * @throws IOException
+     */
     public void calcSignature(File file) throws IOException {
         MessageDigest md;
         try {
@@ -100,14 +117,8 @@ public class Signature implements Readable, Writable {
             md.update(Files.readAllBytes(file.toPath()));
             signature = md.digest();
         } catch (NoSuchAlgorithmException ex) {
+            LOGGER.log(Level.SEVERE, ex.toString(), ex);
         }
-    }
-
-    @Override
-    public void write(PharOutputStream out) throws IOException {
-        out.write(signature);
-        out.writeInt(type.getFlag());
-        out.write(magic);
     }
 
 }

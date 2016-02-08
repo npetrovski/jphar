@@ -35,10 +35,14 @@ import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import lombok.Data;
 
 @Data
 public class Phar extends File {
+
+    private static final Logger LOGGER = Logger.getLogger(Phar.class.getName());
 
     private Stub stub = new Stub();
 
@@ -52,12 +56,9 @@ public class Phar extends File {
         super(pathname);
 
         if (super.exists() && super.isFile()) {
-            try {
-                read();
-            } catch (IOException e) {
-            }
+            read();
         } else {
-            manifest.getAlias().setName(getName());
+            manifest.getAlias().setName(super.getName());
         }
     }
 
@@ -72,20 +73,19 @@ public class Phar extends File {
 
     private final class FileEntryProvider implements EntryProvider {
 
-        private final File file;
+        private final File source;
         private final Compression.Type compression;
 
-        public FileEntryProvider(final File file, final Compression.Type pharCompression) {
-            this.file = file;
-            this.compression = pharCompression;
+        public FileEntryProvider(final File file, final Compression.Type compression) {
+            this.source = file;
+            this.compression = compression;
         }
 
         @Override
-        public List<DataEntry> getPharEntries()
-                throws IOException {
+        public List<DataEntry> getPharEntries() throws IOException {
             return new LinkedList<DataEntry>() {
                 {
-                    add(DataEntry.createFromFile(file, compression));
+                    add(DataEntry.createFromFile(source, compression));
                 }
             };
         }
@@ -95,33 +95,33 @@ public class Phar extends File {
     private final class DirectoryEntryProvider implements EntryProvider {
 
         private final File source;
-
         private final Compression.Type compression;
 
-        public DirectoryEntryProvider(final File file, final Compression.Type pharCompression) {
+        public DirectoryEntryProvider(final File file, final Compression.Type compression) {
             this.source = file;
-            this.compression = pharCompression;
+            this.compression = compression;
         }
 
         @Override
         public List<DataEntry> getPharEntries()
                 throws IOException {
-            List<DataEntry> pharEntries = new LinkedList<>();
-            addPharEntriesRecursively(pharEntries, source.toPath());
-            return pharEntries;
+            List<DataEntry> entries = new LinkedList<>();
+            addPharEntriesRecursively(entries, source.toPath());
+            return entries;
 
         }
 
-        private void addPharEntriesRecursively(final List<DataEntry> pharEntries, final java.nio.file.Path directory)
+        private void addPharEntriesRecursively(final List<DataEntry> entries, final java.nio.file.Path directory)
                 throws IOException {
             try (DirectoryStream<java.nio.file.Path> directoryStream = Files.newDirectoryStream(directory)) {
                 for (java.nio.file.Path element : directoryStream) {
 
-                    String path = String.format("%s/%s", source.getName(), source.toPath().relativize(element).toString());
+                    String path = String.format("%s/%s", source.getName(),
+                            source.toPath().relativize(element).toString());
 
                     File file = element.toFile();
                     if (file.isDirectory() && file.list().length > 0) {
-                        addPharEntriesRecursively(pharEntries, element);
+                        addPharEntriesRecursively(entries, element);
                     } else {
 
                         if (file.isDirectory()) {
@@ -129,7 +129,7 @@ public class Phar extends File {
                         }
                         DataEntry entry = DataEntry.createFromFile(file, compression);
                         entry.getEntryManifest().getPath().setName(path.replace("\\", "/"));
-                        pharEntries.add(entry);
+                        entries.add(entry);
                     }
                 }
             }
@@ -150,14 +150,14 @@ public class Phar extends File {
      * Adds an entry to be stored in the archive.
      *
      * @param file
-     * @param entryCompression
+     * @param compression
      * @throws IOException
      */
-    public void add(final File file, Compression.Type entryCompression) throws IOException {
+    public void add(final File file, Compression.Type compression) throws IOException {
         if (file.isDirectory()) {
-            add(new DirectoryEntryProvider(file, entryCompression));
+            add(new DirectoryEntryProvider(file, compression));
         } else {
-            add(new FileEntryProvider(file, entryCompression));
+            add(new FileEntryProvider(file, compression));
         }
     }
 
@@ -169,23 +169,54 @@ public class Phar extends File {
         }
     }
 
+    /**
+     * Set stub code
+     *
+     * @param stub
+     */
     public void setStub(String stub) {
         this.stub = new Stub(stub);
     }
 
+    /**
+     * Set stub file
+     *
+     * @param stubFile
+     * @throws IOException
+     */
     public void setStub(File stubFile) throws IOException {
         setStub(new String(Files.readAllBytes(stubFile.toPath())));
         this.stub.setLastModified((int) stubFile.lastModified() / 1000);
     }
 
+    /**
+     * Set PHAR file metadata
+     *
+     * @param meta
+     */
     public void setMetadata(Serializable meta) {
         manifest.getMetadata().setMeta(meta);
     }
 
-    private void read() throws IOException {
-        read(new FileInputStream(this));
+    /**
+     * Read PHAR file
+     *
+     * @throws IOException
+     */
+    private void read() {
+        try {
+            read(new FileInputStream(this));
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, ex.toString(), ex);
+        }
     }
 
+    /**
+     * Read PHAR file
+     *
+     * @param inp
+     * @throws IOException
+     */
     private void read(InputStream inp) throws IOException {
 
         try (PharInputStream is = new PharInputStream(inp)) {
@@ -207,6 +238,11 @@ public class Phar extends File {
         }
     }
 
+    /**
+     * Write into PHAR file
+     *
+     * @throws IOException
+     */
     public void write() throws IOException {
         ByteArrayOutputStream data = new ByteArrayOutputStream();
         try (PharOutputStream out = new PharOutputStream(data)) {
@@ -237,6 +273,12 @@ public class Phar extends File {
         }
     }
 
+    /**
+     * Find PHAR entry by name
+     *
+     * @param name
+     * @return
+     */
     public Entry findEntry(String name) {
 
         if (name.equals(Stub.DEFAULT_PATH)) {
@@ -253,6 +295,11 @@ public class Phar extends File {
         return null;
     }
 
+    /**
+     * List PHAR entries
+     *
+     * @return
+     */
     @Override
     public String[] list() {
         List<String> list = new LinkedList<>();
@@ -264,11 +311,17 @@ public class Phar extends File {
         return list.toArray(new String[list.size()]);
     }
 
-    public String[] list(String folder) {
+    /**
+     * List PHAR entries filtered by name
+     *
+     * @param startsWith
+     * @return
+     */
+    public String[] list(String startsWith) {
         List<String> list = new LinkedList<>();
 
         for (String s : list()) {
-            if (s.startsWith(folder)) {
+            if (s.startsWith(startsWith)) {
                 list.add(s);
             }
         }
@@ -276,6 +329,11 @@ public class Phar extends File {
         return list.toArray(new String[list.size()]);
     }
 
+    /**
+     * Remove PHAR entry by name
+     *
+     * @param name
+     */
     public void rm(final String name) {
         for (Iterator<DataEntry> it = entries.iterator(); it.hasNext();) {
             DataEntry entry = it.next();
@@ -288,10 +346,15 @@ public class Phar extends File {
         manifest.setNumberOfFiles(entries.size());
     }
 
-    public void rmdir(final String folder) {
+    /**
+     * Remove PHAR entries/directory
+     *
+     * @param startsWith
+     */
+    public void rmdir(final String startsWith) {
         for (Iterator<DataEntry> it = entries.iterator(); it.hasNext();) {
             DataEntry entry = it.next();
-            if (entry.getName().startsWith(folder)) {
+            if (entry.getName().startsWith(startsWith)) {
                 manifest.getEntryManifest().remove(entry.getEntryManifest());
                 it.remove();
             }
@@ -300,6 +363,13 @@ public class Phar extends File {
         manifest.setNumberOfFiles(entries.size());
     }
 
+    /**
+     * Create PHAR empty folder
+     *
+     * @param folder
+     * @return boolean
+     * @throws IOException
+     */
     public boolean mkdir(String folder) throws IOException {
         if (folder.endsWith("/")) {
             folder = folder + "/";
