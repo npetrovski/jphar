@@ -1,9 +1,9 @@
-jPhar [![Build status](https://travis-ci.org/npetrovski/jphar.svg?branch=master)](https://travis-ci.org/npetrovski/jphar)
+jphar [![Build status](https://travis-ci.org/npetrovski/jphar.svg?branch=master)](https://travis-ci.org/npetrovski/jphar)
 ========================
 
 Overview
 --------
-A Java library for working with PHP phar archives.
+A Java library for working with ![PHP phar archives](http://php.net/manual/en/book.phar.php).
 
 Phar archives are similar in concept to Java JAR archives, but are tailored to the needs and to the flexibility of PHP applications. A Phar archive is used to distribute a complete PHP application or library in a single file.
 
@@ -12,7 +12,7 @@ Features
 jPhar library currenty supports Phar File Format API version 1.1.1 that includes:
 * Create empty folders
 * ZLIB and BZIP compression
-* MD5, SHA1, SHA256 and SHA512 signature
+* MD5, SHA1, SHA256 and SHA512 signatures
 
 MIT LICENSE
 ---
