@@ -3,7 +3,7 @@ jphar [![Build status](https://travis-ci.org/npetrovski/jphar.svg?branch=master)
 
 Overview
 --------
-A Java library for working with ![PHP phar archives](http://php.net/manual/en/book.phar.php).
+A Java library for working with PHP phar archives (http://php.net/manual/en/book.phar.php).
 
 Phar archives are similar in concept to Java JAR archives, but are tailored to the needs and to the flexibility of PHP applications. A Phar archive is used to distribute a complete PHP application or library in a single file.
 
