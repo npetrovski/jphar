@@ -29,10 +29,18 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+
 @Data
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Manifest implements Readable, Writable {
 
-    private Integer len = 0;
+    private Integer manifestLength = 0;
 
     private Integer numberOfFiles = 0;
 
@@ -42,13 +50,16 @@ public class Manifest implements Readable, Writable {
 
     private Name alias = new Name();
 
+    @XmlElement(name = "pharMetadata")
     private Metadata metadata = new Metadata();
 
+    @XmlElementWrapper(name = "entries")
+    @XmlElement(name = "entryManifest")
     private List<EntryManifest> entryManifest = new ArrayList<>();
 
     @Override
     public void read(PharInputStream is) throws IOException {
-        len = is.readRInt() + 4;
+        manifestLength = is.readRInt() + 4;
         numberOfFiles = is.readRInt();
 
         version.read(is);
@@ -76,11 +87,11 @@ public class Manifest implements Readable, Writable {
         int globalZlibFlag = 0;
         int globalBzipFlag = 0;
         for (EntryManifest em : entryManifest) {
-            if (em.getCompression().getType() == Compression.Type.BZIP) {
+            if (em.getCompression().getType() == Compression.Sort.BZIP) {
                 globalBzipFlag = 0x00002000;
             }
 
-            if (em.getCompression().getType() == Compression.Type.ZLIB) {
+            if (em.getCompression().getType() == Compression.Sort.ZLIB) {
                 globalZlibFlag = 0x00001000;
             }
         }

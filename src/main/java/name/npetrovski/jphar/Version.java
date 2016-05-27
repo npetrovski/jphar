@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License
  *
  * Copyright 2016 npetrovski.
@@ -24,12 +24,21 @@
 package name.npetrovski.jphar;
 
 import java.io.IOException;
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import lombok.Data;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlValue;
+import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+
 @Data
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Version implements Readable, Writable {
 
+    @XmlValue
     private String version = "1.1.1";
 
     public static String getVersionString(byte[] a) {
@@ -84,7 +93,7 @@ public class Version implements Readable, Writable {
     public void write(PharOutputStream out) throws IOException {
         out.write(getVersionNibbles(version));
     }
-    
+
     @Override
     public String toString() {
         return this.version;

@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License
  *
  * Copyright 2016 npetrovski.
@@ -26,16 +26,30 @@ package name.npetrovski.jphar;
 import java.io.IOException;
 import lombok.Data;
 
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+
 @Data
+@XmlRootElement(name="entryManifest")
+@XmlAccessorType(XmlAccessType.FIELD)
+//@XmlType(propOrder={"uncompressedSize", "timestamp", "compressedSize", "CRC32", "compression", "path", "entryMetadata"})
 public class EntryManifest implements Readable, Writable {
 
-    private Name path = new Name();
     private Integer uncompressedSize = 0;
+
     private Integer timestamp = 0;
+
     private Integer compressedSize = 0;
+
     private Integer CRC32 = 0;
+
     private Compression compression = new Compression();
-    private Metadata metadata = new Metadata();
+
+    private Name path = new Name();
+
+    private Metadata entryMetadata = new Metadata();
 
     @Override
     public void read(PharInputStream is) throws IOException {
@@ -52,7 +66,7 @@ public class EntryManifest implements Readable, Writable {
 
         compression.read(is);
 
-        metadata.read(is);
+        entryMetadata.read(is);
     }
 
     @Override
@@ -63,19 +77,19 @@ public class EntryManifest implements Readable, Writable {
         out.writeInt(compressedSize);
         out.writeInt(CRC32);
         out.write(compression);
-        out.write(metadata);
+        out.write(entryMetadata);
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Name: ").append(path).append("\n")
-            .append("UncompressedSize: ").append(uncompressedSize).append("\n")
-            .append("Timestamp: ").append(timestamp).append("\n")
-            .append("CompressedSize: ").append(compressedSize).append("\n")
-            .append("CRC32: ").append(CRC32).append("\n")
-            .append("Compression: ").append(compression).append("\n")
-            .append("Metadata: ").append(metadata).append("\n");
+                .append("UncompressedSize: ").append(uncompressedSize).append("\n")
+                .append("Timestamp: ").append(timestamp).append("\n")
+                .append("CompressedSize: ").append(compressedSize).append("\n")
+                .append("CRC32: ").append(CRC32).append("\n")
+                .append("Compression: ").append(compression).append("\n")
+                .append("Metadata: ").append(entryMetadata).append("\n");
 
         return sb.toString();
     }

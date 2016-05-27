@@ -26,22 +26,35 @@ package name.npetrovski.jphar;
 import java.io.IOException;
 import lombok.Data;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlEnumValue;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
+
 @Data
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Compression implements Readable, Writable {
 
     static final int BITMAP_SIGNATURE_FLAG = 0x00010000;
 
-    private Compression.Type type = Compression.Type.NONE;
+    @XmlValue
+    private Compression.Sort type = Compression.Sort.NONE;
 
-    public enum Type {
+    @XmlType
+    @XmlEnum(String.class)
+    public enum Sort {
 
-        BZIP(0x00002000),
-        ZLIB(0x00001000),
-        NONE(0x00000000);
+        @XmlEnumValue("BZIP") BZIP(0x00002000),
+        @XmlEnumValue("ZLIB") ZLIB(0x00001000),
+        @XmlEnumValue("NONE") NONE(0x00000000);
 
         public final int flag;
 
-        private Type(final int i) {
+        private Sort(final int i) {
             this.flag = i;
         }
 
@@ -49,8 +62,8 @@ public class Compression implements Readable, Writable {
             return this.flag;
         }
 
-        public static Type getEnumByInt(int code) {
-            for (Type e : Type.values()) {
+        public static Sort getEnumByInt(int code) {
+            for (Sort e : Sort.values()) {
                 if (code == e.getFlag()) {
                     return e;
                 }
@@ -62,7 +75,7 @@ public class Compression implements Readable, Writable {
     @Override
     public void read(PharInputStream is) throws IOException {
         int f = is.readRInt();
-        type = Compression.Type.getEnumByInt(f & 0x0000f000);
+        type = Compression.Sort.getEnumByInt(f & 0x0000f000);
     }
 
     @Override

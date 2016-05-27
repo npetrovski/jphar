@@ -28,17 +28,27 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import lombok.Data;
 
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlValue;
+
 @Data
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Stub implements Entry, Readable, Writable {
 
     static final String DEFAULT_STUB = "<?php\n__HALT_COMPILER(); ?>\n";
 
     static final String DEFAULT_PATH = ".phar/stub.php";
 
+    @XmlValue
     private String code = DEFAULT_STUB;
 
+    @XmlTransient
     private Integer lastModified = (int) (System.currentTimeMillis() / 1000);
 
     public Stub() {
@@ -46,7 +56,7 @@ public class Stub implements Entry, Readable, Writable {
     }
 
     public Stub(final String code) {
-        assert(code.contains("__HALT_COMPILER"));
+        assert (code.contains("__HALT_COMPILER"));
         this.code = code;
     }
 

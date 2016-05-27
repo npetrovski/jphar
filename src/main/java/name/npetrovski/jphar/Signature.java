@@ -34,23 +34,34 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import lombok.Data;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlEnumValue;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+
 @Data
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Signature implements Readable, Writable {
 
     private static final Logger LOGGER = Logger.getLogger(Signature.class.getName());
 
     private byte[] signature;
 
+    @XmlAttribute(name = "signatureType")
     private Signature.Type type = Signature.Type.SHA1;
 
     private byte[] magic = "GBMB".getBytes();
 
     public enum Type {
 
-        MD5(0x0001, "MD5"),
-        SHA1(0x0002, "SHA-1"),
-        SHA256(0x0004, "SHA-256"),
-        SHA512(0x0008, "SHA-512");
+        @XmlEnumValue("MD5") MD5(0x0001, "MD5"),
+        @XmlEnumValue("SHA1") SHA1(0x0002, "SHA-1"),
+        @XmlEnumValue("SHA256") SHA256(0x0004, "SHA-256"),
+        @XmlEnumValue("SHA512") SHA512(0x0008, "SHA-512");
 
         private final int flag;
         private final String algorithm;

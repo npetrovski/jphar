@@ -41,14 +41,24 @@ import lombok.Data;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlTransient;
+
 @Data
+@XmlAccessorType(XmlAccessType.FIELD)
 public class DataEntry implements Entry, Readable, Writable {
 
     private Long offset;
 
     private File source;
 
+    @XmlTransient
     private EntryManifest entryManifest = new EntryManifest();
+
+    private DataEntry() {
+
+    }
 
     public DataEntry(EntryManifest em) {
         this.entryManifest = em;
@@ -66,7 +76,7 @@ public class DataEntry implements Entry, Readable, Writable {
      * @return
      * @throws IOException
      */
-    public static DataEntry createFromFile(File file, Compression.Type compression)
+    public static DataEntry createFromFile(File file, Compression.Sort compression)
             throws IOException {
 
         EntryManifest em = new EntryManifest();
@@ -78,7 +88,7 @@ public class DataEntry implements Entry, Readable, Writable {
         entry.setSource(file);
 
         if (file.isDirectory()) {
-            em.getCompression().setType(Compression.Type.NONE);
+            em.getCompression().setType(Compression.Sort.NONE);
         } else {
             byte[] data = Files.readAllBytes(file.toPath());
             CRC32 crc = new CRC32();
@@ -165,7 +175,7 @@ public class DataEntry implements Entry, Readable, Writable {
         return null;
     }
 
-    private InputStream getCompressorInputStream(final InputStream is, Compression.Type compression) throws IOException {
+    private InputStream getCompressorInputStream(final InputStream is, Compression.Sort compression) throws IOException {
         switch (compression) {
             case ZLIB:
                 return new InflaterInputStream(is, new Inflater(true));
@@ -179,7 +189,7 @@ public class DataEntry implements Entry, Readable, Writable {
 
     }
 
-    private OutputStream getCompressorOutputStream(final OutputStream os, Compression.Type compression) throws IOException {
+    private OutputStream getCompressorOutputStream(final OutputStream os, Compression.Sort compression) throws IOException {
         switch (compression) {
             case ZLIB:
                 return new DeflaterOutputStream(os, new Deflater(Deflater.DEFAULT_COMPRESSION, true));
@@ -207,6 +217,10 @@ public class DataEntry implements Entry, Readable, Writable {
 
             out.write(compressedData.toByteArray());
         }
+    }
+
+    private void UnsupportedOperationException(String noargument_constructor_is_not_allowed) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

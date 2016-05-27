@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License
  *
  * Copyright 2016 npetrovski.
@@ -26,9 +26,15 @@ package name.npetrovski.jphar;
 import java.io.IOException;
 import lombok.Data;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlValue;
+
 @Data
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Name implements Readable, Writable {
 
+    @XmlValue
     private String name = "";
 
     @Override

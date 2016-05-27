@@ -23,13 +23,17 @@
  */
 package name.npetrovski.jphar;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.util.Iterator;
@@ -37,9 +41,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class Phar extends File {
 
     private static final Logger LOGGER = Logger.getLogger(Phar.class.getName());
@@ -74,9 +85,9 @@ public class Phar extends File {
     private final class FileEntryProvider implements EntryProvider {
 
         private final File source;
-        private final Compression.Type compression;
+        private final Compression.Sort compression;
 
-        public FileEntryProvider(final File file, final Compression.Type compression) {
+        public FileEntryProvider(final File file, final Compression.Sort compression) {
             this.source = file;
             this.compression = compression;
         }
@@ -95,9 +106,9 @@ public class Phar extends File {
     private final class DirectoryEntryProvider implements EntryProvider {
 
         private final File source;
-        private final Compression.Type compression;
+        private final Compression.Sort compression;
 
-        public DirectoryEntryProvider(final File file, final Compression.Type compression) {
+        public DirectoryEntryProvider(final File file, final Compression.Sort compression) {
             this.source = file;
             this.compression = compression;
         }
@@ -143,7 +154,7 @@ public class Phar extends File {
      * @throws java.io.IOException
      */
     public void add(final File file) throws IOException {
-        add(file, Compression.Type.NONE);
+        add(file, Compression.Sort.NONE);
     }
 
     /**
@@ -153,7 +164,7 @@ public class Phar extends File {
      * @param compression
      * @throws IOException
      */
-    public void add(final File file, Compression.Type compression) throws IOException {
+    public void add(final File file, Compression.Sort compression) throws IOException {
         if (file.isDirectory()) {
             add(new DirectoryEntryProvider(file, compression));
         } else {
@@ -392,6 +403,72 @@ public class Phar extends File {
         });
 
         return true;
+    }
+
+
+    public class XmlRoot {
+
+
+    }
+
+    /**
+     * Convert into XML
+     *
+     * @return String
+     * @throws JAXBException
+     */
+    public String toXml() throws JAXBException {
+
+        StringWriter sw = new StringWriter();
+
+        JAXBContext jaxbContext = JAXBContext.newInstance(name.npetrovski.jphar.jaxb.Root.class);
+        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+        jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+
+        name.npetrovski.jphar.jaxb.Root root = new name.npetrovski.jphar.jaxb.Root();
+        root.setPhar(this);
+
+        jaxbMarshaller.marshal(root, sw);
+
+        return sw.toString();
+    }
+
+    public void toXml(File file) throws IOException, JAXBException {
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+        JAXBContext jaxbContext = JAXBContext.newInstance(name.npetrovski.jphar.jaxb.Root.class);
+        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+        jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+
+        name.npetrovski.jphar.jaxb.Root root = new name.npetrovski.jphar.jaxb.Root();
+        root.setPhar(this);
+
+        jaxbMarshaller.marshal(root, writer);
+    }
+
+    /**
+     * Convert from XML
+     *
+     * @param xml String
+     * @return Phar
+     * @throws JAXBException
+     */
+    public static Phar fromXml(String xml) throws JAXBException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(name.npetrovski.jphar.jaxb.Root.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+
+        return ((name.npetrovski.jphar.jaxb.Root) jaxbUnmarshaller.unmarshal(new StringReader(xml))).getPhar();
+    }
+
+    public static Phar fromXml(File file) throws IOException, JAXBException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(name.npetrovski.jphar.jaxb.Root.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+
+        return ((name.npetrovski.jphar.jaxb.Root) jaxbUnmarshaller.unmarshal(file)).getPhar();
     }
 
 }
