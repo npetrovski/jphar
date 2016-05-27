@@ -37,10 +37,8 @@ import lombok.Data;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 @Data
 @XmlRootElement
@@ -52,21 +50,22 @@ public class Signature implements Readable, Writable {
     private byte[] signature;
 
     @XmlAttribute(name = "signatureType")
-    private Signature.Type type = Signature.Type.SHA1;
+    private Signature.Algorithm algorithm = Signature.Algorithm.SHA1;
 
-    private byte[] magic = "GBMB".getBytes();
+    private final String magic = "GBMB";
 
-    public enum Type {
+    public enum Algorithm {
 
         @XmlEnumValue("MD5") MD5(0x0001, "MD5"),
-        @XmlEnumValue("SHA1") SHA1(0x0002, "SHA-1"),
-        @XmlEnumValue("SHA256") SHA256(0x0004, "SHA-256"),
-        @XmlEnumValue("SHA512") SHA512(0x0008, "SHA-512");
+        @XmlEnumValue("SHA-1") SHA1(0x0002, "SHA-1"),
+        @XmlEnumValue("SHA-256") SHA256(0x0004, "SHA-256"),
+        @XmlEnumValue("SHA-512") SHA512(0x0008, "SHA-512");
 
         private final int flag;
+
         private final String algorithm;
 
-        private Type(final int flag, final String algorithm) {
+        private Algorithm(final int flag, final String algorithm) {
             this.flag = flag;
             this.algorithm = algorithm;
         }
@@ -79,9 +78,18 @@ public class Signature implements Readable, Writable {
             return this.algorithm;
         }
 
-        public static Type getEnumByFlag(int code) {
-            for (Type e : Type.values()) {
+        public static Algorithm getEnumByFlag(int code) {
+            for (Algorithm e : Algorithm.values()) {
                 if (code == e.getFlag()) {
+                    return e;
+                }
+            }
+            return null;
+        }
+
+        public static Algorithm getEnumByName(String name) {
+            for (Algorithm e : Algorithm.values()) {
+                if (name.equals(e.getAlgorithm())) {
                     return e;
                 }
             }
@@ -103,16 +111,15 @@ public class Signature implements Readable, Writable {
         signature = Arrays.copyOfRange(data, 0, data.length - 8);
 
         byte[] typedata = Arrays.copyOfRange(data, data.length - 8, data.length - 4);
-        type = Signature.Type.getEnumByFlag(
-                (typedata[3] << 24) + (typedata[2] << 16)
-                + (typedata[1] << 8) + (typedata[0] << 0));
+        algorithm = Signature.Algorithm.getEnumByFlag(
+                (typedata[3] << 24) + (typedata[2] << 16) + (typedata[1] << 8) + (typedata[0] << 0));
     }
 
     @Override
     public void write(PharOutputStream out) throws IOException {
         out.write(signature);
-        out.writeInt(type.getFlag());
-        out.write(magic);
+        out.writeInt(algorithm.getFlag());
+        out.write(magic.getBytes());
     }
 
     /**
@@ -124,7 +131,7 @@ public class Signature implements Readable, Writable {
     public void calcSignature(File file) throws IOException {
         MessageDigest md;
         try {
-            md = MessageDigest.getInstance(type.getAlgorithm());
+            md = MessageDigest.getInstance(algorithm.getAlgorithm());
             md.update(Files.readAllBytes(file.toPath()));
             signature = md.digest();
         } catch (NoSuchAlgorithmException ex) {

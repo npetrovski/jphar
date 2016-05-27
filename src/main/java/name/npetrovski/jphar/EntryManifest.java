@@ -27,14 +27,12 @@ import java.io.IOException;
 import lombok.Data;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 @Data
-@XmlRootElement(name="entryManifest")
+@XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-//@XmlType(propOrder={"uncompressedSize", "timestamp", "compressedSize", "CRC32", "compression", "path", "entryMetadata"})
 public class EntryManifest implements Readable, Writable {
 
     private Integer uncompressedSize = 0;
@@ -49,7 +47,7 @@ public class EntryManifest implements Readable, Writable {
 
     private Name path = new Name();
 
-    private Metadata entryMetadata = new Metadata();
+    private Metadata metadata = new Metadata();
 
     @Override
     public void read(PharInputStream is) throws IOException {
@@ -66,7 +64,7 @@ public class EntryManifest implements Readable, Writable {
 
         compression.read(is);
 
-        entryMetadata.read(is);
+        metadata.read(is);
     }
 
     @Override
@@ -77,7 +75,7 @@ public class EntryManifest implements Readable, Writable {
         out.writeInt(compressedSize);
         out.writeInt(CRC32);
         out.write(compression);
-        out.write(entryMetadata);
+        out.write(metadata);
     }
 
     @Override
@@ -89,7 +87,7 @@ public class EntryManifest implements Readable, Writable {
                 .append("CompressedSize: ").append(compressedSize).append("\n")
                 .append("CRC32: ").append(CRC32).append("\n")
                 .append("Compression: ").append(compression).append("\n")
-                .append("Metadata: ").append(entryMetadata).append("\n");
+                .append("Metadata: ").append(metadata).append("\n");
 
         return sb.toString();
     }

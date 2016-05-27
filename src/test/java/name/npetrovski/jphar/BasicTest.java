@@ -33,12 +33,14 @@ public class BasicTest extends TestCase {
         final Phar p = new Phar(testPharFile);
         p.add(new File("src/test/resources/Image"), Compression.Type.ZLIB);
         p.setStub(new File("src/test/resources/stub.php"));
+
         p.setMetadata(new HashMap<String, String>() {
             {
                 put("Author", "Nikolay Petrovski");
             }
         }
         );
+        p.mkdir("new/empty");
 
         p.write();
 

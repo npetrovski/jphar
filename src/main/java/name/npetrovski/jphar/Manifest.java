@@ -50,11 +50,10 @@ public class Manifest implements Readable, Writable {
 
     private Name alias = new Name();
 
-    @XmlElement(name = "pharMetadata")
+    @XmlElement
     private Metadata metadata = new Metadata();
 
     @XmlElementWrapper(name = "entries")
-    @XmlElement(name = "entryManifest")
     private List<EntryManifest> entryManifest = new ArrayList<>();
 
     @Override
@@ -87,11 +86,11 @@ public class Manifest implements Readable, Writable {
         int globalZlibFlag = 0;
         int globalBzipFlag = 0;
         for (EntryManifest em : entryManifest) {
-            if (em.getCompression().getType() == Compression.Sort.BZIP) {
+            if (em.getCompression().getType() == Compression.Type.BZIP) {
                 globalBzipFlag = 0x00002000;
             }
 
-            if (em.getCompression().getType() == Compression.Sort.ZLIB) {
+            if (em.getCompression().getType() == Compression.Type.ZLIB) {
                 globalZlibFlag = 0x00001000;
             }
         }

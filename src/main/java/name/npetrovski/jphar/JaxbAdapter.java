@@ -1,29 +1,21 @@
-package name.npetrovski.jphar.jaxb;
+package name.npetrovski.jphar;
 
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import lombok.Data;
-import name.npetrovski.jphar.DataEntry;
-import name.npetrovski.jphar.Manifest;
-import name.npetrovski.jphar.Phar;
-import name.npetrovski.jphar.Signature;
-import name.npetrovski.jphar.Stub;
 
-public class PharAdapter extends XmlAdapter<PharAdapter.PharMapper, Phar> {
+public class JaxbAdapter extends XmlAdapter<JaxbAdapter.PharMapper, Phar> {
 
     @Data
     @XmlAccessorType(XmlAccessType.FIELD)
-    @XmlType(propOrder = {"pathname", "stub", "manifest", "entries", "signature"})
     static class PharMapper {
 
         @XmlElement
-        private String pathname;
+        private String fullpath;
 
         @XmlElement
         private Stub stub;
@@ -42,7 +34,7 @@ public class PharAdapter extends XmlAdapter<PharAdapter.PharMapper, Phar> {
 
     @Override
     public Phar unmarshal(PharMapper map) throws Exception {
-        Phar result = new Phar(map.getPathname());
+        Phar result = new Phar(map.getFullpath());
         result.setStub(map.getStub().getCode());
         result.setManifest(map.getManifest());
         result.setEntries(map.getEntries());
@@ -54,7 +46,7 @@ public class PharAdapter extends XmlAdapter<PharAdapter.PharMapper, Phar> {
     @Override
     public PharMapper marshal(Phar phar) throws Exception {
         PharMapper result = new PharMapper();
-        result.setPathname(phar.getPath());
+        result.setFullpath(phar.getCanonicalPath());
         result.setStub(phar.getStub());
         result.setManifest(phar.getManifest());
         result.setEntries(phar.getEntries());

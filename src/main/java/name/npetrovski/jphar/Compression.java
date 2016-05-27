@@ -28,11 +28,7 @@ import lombok.Data;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
 @Data
@@ -42,29 +38,58 @@ public class Compression implements Readable, Writable {
     static final int BITMAP_SIGNATURE_FLAG = 0x00010000;
 
     @XmlValue
-    private Compression.Sort type = Compression.Sort.NONE;
+    private Compression.Type type = Compression.Type.NONE;
 
-    @XmlType
-    @XmlEnum(String.class)
-    public enum Sort {
+    public Compression() {
 
-        @XmlEnumValue("BZIP") BZIP(0x00002000),
-        @XmlEnumValue("ZLIB") ZLIB(0x00001000),
-        @XmlEnumValue("NONE") NONE(0x00000000);
+    }
 
-        public final int flag;
+    public Compression(Type t) {
+        this.type = t;
+    }
 
-        private Sort(final int i) {
+    public Compression(String t) {
+        Type found = Type.getEnumByName(t);
+        if (null != found) {
+            this.type = found;
+        }
+    }
+
+    public enum Type {
+
+        @XmlEnumValue("BZIP") BZIP(0x00002000, "BZIP"),
+        @XmlEnumValue("ZLIB") ZLIB(0x00001000, "ZLIB"),
+        @XmlEnumValue("NONE") NONE(0x00000000, "NONE");
+
+        private final int flag;
+
+        private final String compression;
+
+        private Type(final int i, final String name) {
             this.flag = i;
+            this.compression = name;
         }
 
         public int getFlag() {
             return this.flag;
         }
 
-        public static Sort getEnumByInt(int code) {
-            for (Sort e : Sort.values()) {
-                if (code == e.getFlag()) {
+        public String getType() {
+            return this.compression;
+        }
+
+        public static Type getEnumByInt(int c) {
+            for (Type e : Type.values()) {
+                if (c == e.getFlag()) {
+                    return e;
+                }
+            }
+            return null;
+        }
+
+        public static Type getEnumByName(String n) {
+            for (Type e : Type.values()) {
+                if (n.equals(e.getType())) {
                     return e;
                 }
             }
@@ -75,7 +100,7 @@ public class Compression implements Readable, Writable {
     @Override
     public void read(PharInputStream is) throws IOException {
         int f = is.readRInt();
-        type = Compression.Sort.getEnumByInt(f & 0x0000f000);
+        type = Compression.Type.getEnumByInt(f & 0x0000f000);
     }
 
     @Override
@@ -83,8 +108,4 @@ public class Compression implements Readable, Writable {
         out.writeInt(type.getFlag());
     }
 
-    @Override
-    public String toString() {
-        return type.name();
-    }
 }

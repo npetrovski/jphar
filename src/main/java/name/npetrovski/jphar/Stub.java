@@ -25,9 +25,11 @@ package name.npetrovski.jphar;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import lombok.Data;
@@ -58,6 +60,11 @@ public class Stub implements Entry, Readable, Writable {
     public Stub(final String code) {
         assert (code.contains("__HALT_COMPILER"));
         this.code = code;
+    }
+
+    public Stub(final File path) throws IOException {
+        this(new String(Files.readAllBytes(path.toPath())));
+        lastModified = (int) path.lastModified() / 1000;
     }
 
     @Override

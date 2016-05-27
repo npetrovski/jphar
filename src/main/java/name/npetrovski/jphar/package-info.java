@@ -1,8 +1,8 @@
 @XmlJavaTypeAdapters({
     @XmlJavaTypeAdapter(
-            value = name.npetrovski.jphar.jaxb.PharAdapter.class,
-            type = name.npetrovski.jphar.Phar.class
+            value = JaxbAdapter.class,
+            type = Phar.class
     )})
-package name.npetrovski.jphar.jaxb;
+package name.npetrovski.jphar;
 
 import javax.xml.bind.annotation.adapters.*;

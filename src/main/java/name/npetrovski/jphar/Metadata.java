@@ -30,17 +30,21 @@ import lombok.Data;
 
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlValue;
 
 @Data
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Metadata implements Readable, Writable {
 
-    @XmlElement(defaultValue = "")
-    private String meta;
+    @XmlValue
+    private String meta = "";
 
-    public void setMeta(Serializable data) {
-        meta = Pherialize.serialize(data);
+    public Metadata() {
+
+    }
+
+    public Metadata(Serializable data) {
+        this.meta = Pherialize.serialize(data);
     }
 
     @Override
@@ -68,6 +72,6 @@ public class Metadata implements Readable, Writable {
 
     @Override
     public String toString() {
-        return meta;
+        return this.meta;
     }
 }

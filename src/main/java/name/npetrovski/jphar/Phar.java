@@ -45,6 +45,10 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -85,9 +89,9 @@ public class Phar extends File {
     private final class FileEntryProvider implements EntryProvider {
 
         private final File source;
-        private final Compression.Sort compression;
+        private final Compression.Type compression;
 
-        public FileEntryProvider(final File file, final Compression.Sort compression) {
+        public FileEntryProvider(final File file, final Compression.Type compression) {
             this.source = file;
             this.compression = compression;
         }
@@ -106,9 +110,9 @@ public class Phar extends File {
     private final class DirectoryEntryProvider implements EntryProvider {
 
         private final File source;
-        private final Compression.Sort compression;
+        private final Compression.Type compression;
 
-        public DirectoryEntryProvider(final File file, final Compression.Sort compression) {
+        public DirectoryEntryProvider(final File file, final Compression.Type compression) {
             this.source = file;
             this.compression = compression;
         }
@@ -138,7 +142,7 @@ public class Phar extends File {
                         if (file.isDirectory()) {
                             path = path + "/";
                         }
-                        DataEntry entry = DataEntry.createFromFile(file, compression);
+                        DataEntry entry = DataEntry.createFromFile(file, this.compression);
                         entry.getEntryManifest().getPath().setName(path.replace("\\", "/"));
                         entries.add(entry);
                     }
@@ -147,31 +151,13 @@ public class Phar extends File {
         }
     }
 
-    /**
-     * Adds an entry to be stored in the archive.
-     *
-     * @param file
-     * @throws java.io.IOException
-     */
-    public void add(final File file) throws IOException {
-        add(file, Compression.Sort.NONE);
-    }
 
     /**
      * Adds an entry to be stored in the archive.
      *
-     * @param file
-     * @param compression
+     * @param pharEntryProvider
      * @throws IOException
      */
-    public void add(final File file, Compression.Sort compression) throws IOException {
-        if (file.isDirectory()) {
-            add(new DirectoryEntryProvider(file, compression));
-        } else {
-            add(new FileEntryProvider(file, compression));
-        }
-    }
-
     private void add(final EntryProvider pharEntryProvider) throws IOException {
         for (DataEntry entry : pharEntryProvider.getPharEntries()) {
             entries.add(entry);
@@ -180,33 +166,63 @@ public class Phar extends File {
         }
     }
 
+    public void add(final File file, final Compression.Type compression) throws IOException {
+        if (file.isDirectory()) {
+            add(new DirectoryEntryProvider(file, compression));
+        } else {
+            add(new FileEntryProvider(file, compression));
+        }
+    }
+
+    public void add(final File file) throws IOException {
+        add(file, Compression.Type.NONE);
+    }
+
+    public void add(final File file, String compression) throws IOException {
+        Compression.Type type = Compression.Type.getEnumByName(compression);
+        if (null == type) {
+            add(file);
+        } else {
+            add(file, type);
+        }
+    }
+
     /**
      * Set stub code
      *
      * @param stub
      */
-    public void setStub(String stub) {
+    public void setStub(final String stub) {
         this.stub = new Stub(stub);
     }
 
-    /**
-     * Set stub file
-     *
-     * @param stubFile
-     * @throws IOException
-     */
-    public void setStub(File stubFile) throws IOException {
-        setStub(new String(Files.readAllBytes(stubFile.toPath())));
-        this.stub.setLastModified((int) stubFile.lastModified() / 1000);
+    public void setStub(final File stubFile) throws IOException {
+        this.stub = new Stub(stubFile);
     }
 
     /**
-     * Set PHAR file metadata
+     * Set PHAR signature algorithm
      *
-     * @param meta
+     * @param type
      */
-    public void setMetadata(Serializable meta) {
-        manifest.getMetadata().setMeta(meta);
+    public void setSignatureAlgorithm(final Signature.Algorithm algorithm) {
+        signature.setAlgorithm(algorithm);
+    }
+
+    public void setSignatureAlgorithm(final String algorithm) {
+        Signature.Algorithm sign = Signature.Algorithm.getEnumByName(algorithm);
+        if (null != sign) {
+            setSignatureAlgorithm(sign);
+        }
+    }
+
+    /**
+     * Set PHAR file meta-data
+     *
+     * @param data
+     */
+    public void setMetadata(final Serializable data) {
+        manifest.setMetadata(new Metadata(data));
     }
 
     /**
@@ -381,34 +397,38 @@ public class Phar extends File {
      * @return boolean
      * @throws IOException
      */
-    public boolean mkdir(String folder) throws IOException {
+    public DataEntry mkdir(String folder) throws IOException {
         if (folder.endsWith("/")) {
             folder = folder + "/";
         }
 
-        for (DataEntry entry : entries) {
-            if (entry.getName().startsWith(folder)) {
-                return false;
+        for (DataEntry e : entries) {
+            if (e.getName().startsWith(folder)) {
+                return e;
             }
         }
 
         final String folderName = folder;
+        final DataEntry entry = new DataEntry(folderName);
         add(new EntryProvider() {
             @Override
             public List<DataEntry> getPharEntries() throws IOException {
                 List<DataEntry> list = new LinkedList<>();
-                list.add(new DataEntry(folderName));
+                list.add(entry);
                 return list;
             }
         });
 
-        return true;
+        return entry;
     }
 
+    @Data
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    static class Root {
 
-    public class XmlRoot {
-
-
+        @XmlElement
+        private Phar phar;
     }
 
     /**
@@ -421,13 +441,13 @@ public class Phar extends File {
 
         StringWriter sw = new StringWriter();
 
-        JAXBContext jaxbContext = JAXBContext.newInstance(name.npetrovski.jphar.jaxb.Root.class);
+        JAXBContext jaxbContext = JAXBContext.newInstance(Root.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
 
-        name.npetrovski.jphar.jaxb.Root root = new name.npetrovski.jphar.jaxb.Root();
+        Root root = new Root();
         root.setPhar(this);
 
         jaxbMarshaller.marshal(root, sw);
@@ -439,12 +459,12 @@ public class Phar extends File {
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 
-        JAXBContext jaxbContext = JAXBContext.newInstance(name.npetrovski.jphar.jaxb.Root.class);
+        JAXBContext jaxbContext = JAXBContext.newInstance(Root.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
 
-        name.npetrovski.jphar.jaxb.Root root = new name.npetrovski.jphar.jaxb.Root();
+        Root root = new Root();
         root.setPhar(this);
 
         jaxbMarshaller.marshal(root, writer);
@@ -458,17 +478,17 @@ public class Phar extends File {
      * @throws JAXBException
      */
     public static Phar fromXml(String xml) throws JAXBException {
-        JAXBContext jaxbContext = JAXBContext.newInstance(name.npetrovski.jphar.jaxb.Root.class);
+        JAXBContext jaxbContext = JAXBContext.newInstance(Root.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-        return ((name.npetrovski.jphar.jaxb.Root) jaxbUnmarshaller.unmarshal(new StringReader(xml))).getPhar();
+        return ((Root) jaxbUnmarshaller.unmarshal(new StringReader(xml))).getPhar();
     }
 
     public static Phar fromXml(File file) throws IOException, JAXBException {
-        JAXBContext jaxbContext = JAXBContext.newInstance(name.npetrovski.jphar.jaxb.Root.class);
+        JAXBContext jaxbContext = JAXBContext.newInstance(Root.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-        return ((name.npetrovski.jphar.jaxb.Root) jaxbUnmarshaller.unmarshal(file)).getPhar();
+        return ((Root) jaxbUnmarshaller.unmarshal(file)).getPhar();
     }
 
 }
