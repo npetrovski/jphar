@@ -3,7 +3,4 @@ language: java
 jdk:
   - oraclejdk8
  
-before_install:
-  - mvn -DartifactId=pherialize -DgroupId=de.ailis.pherialize -Dversion=1.2.3-SNAPSHOT -Dpackaging=jar -Dfile=lib/pherialize-1.2.3-SNAPSHOT.jar -DgeneratePom=false install:install-file 
-
 install: mvn test install
