@@ -37,8 +37,7 @@ public class PharInputStream extends FilterInputStream {
     }
 
     /**
-     * <p>
-     * Get the stream position.</p>
+     * <p>Get the stream position.</p>
      *
      * <p>
      * Eventually, the position will roll over to a negative number. Reading 1 Tb per second, this would occur after

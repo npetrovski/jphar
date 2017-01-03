@@ -114,7 +114,7 @@ struct Signature {
     char magic[4];
 };
 
-public struct PharFile
+public struct PHAR_File
 {      
     Stub                 Stub;
     Manifest             Manifest;

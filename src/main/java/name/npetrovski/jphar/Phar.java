@@ -394,7 +394,7 @@ public class Phar extends File {
      * Create PHAR empty folder
      *
      * @param folder
-     * @return boolean
+     * @return DataEntry
      * @throws IOException
      */
     public DataEntry mkdir(String folder) throws IOException {
