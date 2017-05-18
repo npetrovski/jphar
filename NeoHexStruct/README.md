@@ -9,9 +9,9 @@ Visit http://www.hhdsoftware.com/hex-editor to retrieve a copy of the software.
 ### How to install / configure
 
 1. Copy both **phar.h** and **phar.js** files inside **%NEOHEX_INSTALL%\Sample Structures** folder
-2. Open Hex Editor and in *Structure Library* add new structure file "phar.h" (a new structure PHAR_FILE should appear)
+2. Open Hex Editor and in *Structure Library* (View -> Tool Windows -> Structure Library) add new structure file "phar.h" (a new structure PHAR_FILE should appear)
 3. Open a ".phar" file (could be any .phar file) - this step is immportant otherwise you won't be able to bind the new scheme
-4. In *Structure Viewer* bind the new structure - from Type dropdown select "phar.h" and specify the name of the bind
+4. In *Structure Viewer* (View -> Tool Windows -> Structure Viewer) bind the new structure - from Type dropdown select "phar.h" and specify the name of the bind
 5. In *Structure Viewer* hit "Save Scheme..." and give a name of the new scheme (example. "PHAR")
 6. In *Structure Viewer* hit "Associations..", for "RegEx" enter ".+?\\.phar$" (w/o quotes), for Associated scheme select "PHAR" and hit "Add"
 
