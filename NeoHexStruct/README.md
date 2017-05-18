@@ -7,7 +7,7 @@
 3. Open a simple ".phar" file - this step is immportant otherwise you won't be able to bind the new scheme
 4. In *Structure Viewer* bind the new structure - from Type dropdown select "phar.h" and specify the name of the bind
 5. In *Structure Viewer* hit "Save Scheme..." and give a name of the new scheme (example. "PHAR")
-6. In *Structure Viewer* hit "Associations..", for "RegEx" enter ".+?\.phar$" (w/o quotes), for Associated scheme select "PHAR" and hit "Add"
+6. In *Structure Viewer* hit "Associations..", for "RegEx" enter ".+?\\.phar$" (w/o quotes), for Associated scheme select "PHAR" and hit "Add"
 
 ### PHAR file structure
 ```
