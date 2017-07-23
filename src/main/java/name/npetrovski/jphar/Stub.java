@@ -32,11 +32,11 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import lombok.Data;
-
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlValue;
+
+import lombok.Data;
 
 @Data
 @XmlRootElement
