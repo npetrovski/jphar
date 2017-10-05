@@ -23,6 +23,9 @@
  */
 package name.npetrovski.jphar;
 
+import lombok.Data;
+
+import javax.xml.bind.annotation.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -32,13 +35,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlEnumValue;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import lombok.Data;
 
 @Data
 @XmlRootElement
@@ -65,7 +61,7 @@ public class Signature implements Readable, Writable {
 
         private final String algorithm;
 
-        private Algorithm(final int flag, final String algorithm) {
+        Algorithm(final int flag, final String algorithm) {
             this.flag = flag;
             this.algorithm = algorithm;
         }
@@ -112,7 +108,7 @@ public class Signature implements Readable, Writable {
 
         byte[] typedata = Arrays.copyOfRange(data, data.length - 8, data.length - 4);
         algorithm = Signature.Algorithm.getEnumByFlag(
-                (typedata[3] << 24) + (typedata[2] << 16) + (typedata[1] << 8) + (typedata[0] << 0));
+                (typedata[3] << 24) + (typedata[2] << 16) + (typedata[1] << 8) + (typedata[0]));
     }
 
     @Override
@@ -125,8 +121,6 @@ public class Signature implements Readable, Writable {
     /**
      * Calculate file signature
      *
-     * @param file
-     * @throws IOException
      */
     public void calcSignature(File file) throws IOException {
         MessageDigest md;

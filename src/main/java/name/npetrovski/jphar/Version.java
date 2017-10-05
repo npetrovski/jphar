@@ -23,7 +23,6 @@
  */
 package name.npetrovski.jphar;
 
-import java.io.IOException;
 import lombok.Data;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -31,6 +30,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+import java.io.IOException;
 
 @Data
 @XmlRootElement
@@ -81,14 +81,12 @@ public class Version implements Readable, Writable {
         return nibbles;
     }
 
-    @Override
     public void read(PharInputStream is) throws IOException {
         byte[] v = new byte[2];
         is.read(v, 0, 2);
         version = getVersionString(v);
     }
 
-    @Override
     public void write(PharOutputStream out) throws IOException {
         out.write(getVersionNibbles(version));
     }

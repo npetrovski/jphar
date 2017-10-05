@@ -23,12 +23,12 @@
  */
 package name.npetrovski.jphar;
 
-import java.io.IOException;
-import javax.xml.bind.annotation.XmlRootElement;
+import lombok.Data;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-
-import lombok.Data;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.io.IOException;
 
 @Data
 @XmlRootElement
@@ -80,16 +80,13 @@ public class EntryManifest implements Readable, Writable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Name: ").append(path).append("\n")
-                .append("UncompressedSize: ").append(uncompressedSize).append("\n")
-                .append("Timestamp: ").append(timestamp).append("\n")
-                .append("CompressedSize: ").append(compressedSize).append("\n")
-                .append("CRC32: ").append(CRC32).append("\n")
-                .append("Compression: ").append(compression).append("\n")
-                .append("Metadata: ").append(metadata).append("\n");
-
-        return sb.toString();
+        return "Name: " + path + "\n" +
+                "UncompressedSize: " + uncompressedSize + "\n" +
+                "Timestamp: " + timestamp + "\n" +
+                "CompressedSize: " + compressedSize + "\n" +
+                "CRC32: " + CRC32 + "\n" +
+                "Compression: " + compression + "\n" +
+                "Metadata: " + metadata + "\n";
     }
 
 }

@@ -25,7 +25,7 @@ package name.npetrovski.jphar;
 
 import java.io.IOException;
 
-public interface Writable {
+interface Writable {
 
     void write(PharOutputStream out) throws IOException;
 }

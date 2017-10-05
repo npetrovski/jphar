@@ -23,7 +23,7 @@
  */
 package name.npetrovski.jphar;
 
-public interface Readable {
+interface Readable {
 
-    public void read(PharInputStream is) throws Exception;
+    void read(PharInputStream is) throws Exception;
 }

@@ -30,7 +30,7 @@ import java.io.InputStream;
 
 public class PharInputStream extends FilterInputStream {
 
-    protected long pos = 0;
+    private long pos = 0;
 
     public PharInputStream(InputStream input) throws IOException {
         super(input);
@@ -43,7 +43,6 @@ public class PharInputStream extends FilterInputStream {
      * Eventually, the position will roll over to a negative number. Reading 1 Tb per second, this would occur after
      * approximately three months. Applications should account for this possibility in their design.</p>
      *
-     * @return the current stream position.
      */
     public synchronized long getPosition() {
         return pos;
@@ -84,6 +83,6 @@ public class PharInputStream extends FilterInputStream {
             throw new EOFException();
         }
 
-        return ((ch4 << 24) + (ch3 << 16) + (ch2 << 8) + (ch1 << 0));
+        return ((ch4 << 24) + (ch3 << 16) + (ch2 << 8) + (ch1));
     }
 }

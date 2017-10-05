@@ -23,14 +23,14 @@
  */
 package name.npetrovski.jphar;
 
-import java.io.IOException;
 import de.ailis.pherialize.Pherialize;
-import java.io.Serializable;
 import lombok.Data;
 
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlValue;
+import java.io.IOException;
+import java.io.Serializable;
 
 @Data
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -40,14 +40,12 @@ public class Metadata implements Readable, Writable {
     private String meta = "";
 
     public Metadata() {
-
     }
 
     public Metadata(Serializable data) {
         this.meta = Pherialize.serialize(data);
     }
 
-    @Override
     public void read(PharInputStream is) throws IOException {
         int len = is.readRInt();
 
@@ -59,7 +57,6 @@ public class Metadata implements Readable, Writable {
         }
     }
 
-    @Override
     public void write(PharOutputStream out) throws IOException {
         if (null != meta) {
             byte[] data = meta.getBytes("UTF-8");

@@ -29,15 +29,15 @@ import java.io.OutputStream;
 
 public interface Entry {
 
-    public InputStream getInputStream() throws IOException;
+    InputStream getInputStream() throws IOException;
 
-    public OutputStream getOutputStream() throws IOException;
+    OutputStream getOutputStream() throws IOException;
 
-    public String getName();
+    String getName();
 
-    public Integer getSize();
+    Integer getSize();
 
-    public Integer getLastmodified();
+    Integer getLastModified();
 
-    public boolean isDirectory();
+    boolean isDirectory();
 }

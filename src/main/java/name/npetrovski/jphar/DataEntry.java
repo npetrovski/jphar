@@ -23,26 +23,15 @@
  */
 package name.npetrovski.jphar;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.nio.file.Files;
-import java.util.zip.CRC32;
-import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.Inflater;
-import java.util.zip.InflaterInputStream;
 import lombok.Data;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import java.io.*;
+import java.nio.file.Files;
+import java.util.zip.*;
 
 @Data
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -69,10 +58,6 @@ public class DataEntry implements Entry, Readable, Writable {
     /**
      * Create entry from file
      *
-     * @param file
-     * @param compression
-     * @return
-     * @throws IOException
      */
     public static DataEntry createFromFile(File file, Compression.Type compression)
             throws IOException {
@@ -116,7 +101,7 @@ public class DataEntry implements Entry, Readable, Writable {
     }
 
     @Override
-    public Integer getLastmodified() {
+    public Integer getLastModified() {
         return entryManifest.getTimestamp();
     }
 
@@ -200,13 +185,11 @@ public class DataEntry implements Entry, Readable, Writable {
         }
     }
 
-    @Override
     public void read(PharInputStream is) throws IOException {
         offset = is.getPosition();
         is.skip(entryManifest.getCompressedSize());
     }
 
-    @Override
     public void write(PharOutputStream out) throws IOException {
 
         ByteArrayOutputStream compressedData = (ByteArrayOutputStream) getOutputStream();

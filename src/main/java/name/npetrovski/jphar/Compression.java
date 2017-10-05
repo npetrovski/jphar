@@ -23,13 +23,13 @@
  */
 package name.npetrovski.jphar;
 
-import java.io.IOException;
+import lombok.Data;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlValue;
-
-import lombok.Data;
+import java.io.IOException;
 
 @Data
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -65,7 +65,7 @@ public class Compression implements Readable, Writable {
 
         private final String compression;
 
-        private Type(final int i, final String name) {
+        Type(final int i, final String name) {
             this.flag = i;
             this.compression = name;
         }

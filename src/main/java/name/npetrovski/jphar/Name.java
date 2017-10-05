@@ -23,12 +23,12 @@
  */
 package name.npetrovski.jphar;
 
-import java.io.IOException;
+import lombok.Data;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlValue;
-
-import lombok.Data;
+import java.io.IOException;
 
 @Data
 @XmlAccessorType(XmlAccessType.FIELD)

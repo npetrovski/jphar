@@ -23,20 +23,11 @@
  */
 package name.npetrovski.jphar;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlValue;
-
 import lombok.Data;
+
+import javax.xml.bind.annotation.*;
+import java.io.*;
+import java.nio.file.Files;
 
 @Data
 @XmlRootElement
@@ -83,7 +74,7 @@ public class Stub implements Entry, Readable, Writable {
     }
 
     @Override
-    public Integer getLastmodified() {
+    public Integer getLastModified() {
         return lastModified;
     }
 

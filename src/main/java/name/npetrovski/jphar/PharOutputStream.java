@@ -34,7 +34,7 @@ public final class PharOutputStream extends FilterOutputStream {
     }
 
     public void writeInt(final int i) throws IOException {
-        this.out.write((i >>> 0) & 0xFF);
+        this.out.write(i & 0xFF);
         this.out.write((i >>> 8) & 0xFF);
         this.out.write((i >>> 16) & 0xFF);
         this.out.write((i >>> 24) & 0xFF);
